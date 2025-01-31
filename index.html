@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple A/R Payment with Dark Mode</title>
+  <style>
+    /* Basic styling for container-wrapper, container, card, card-content */
+    :root {
+      --primary-bg: #f2f2f2;
+      --primary-text: #000000;
+      --card-bg: #ffffff;
+      --input-bg: #ffffff;
+      --input-text: #000000;
+      --switch-bg-off: #ccc;
+      --switch-bg-on: #007BFF;
+      --button-bg: #007BFF;
+      --button-bg-hover: #0056b3;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--primary-bg);
+      color: var(--primary-text);
+    }
+
+    .container-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-top: 40px;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 600px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .card-content {
+      padding: 20px;
+    }
+
+    .card-content h2 {
+      margin-top: 0;
+    }
+
+    .form-row {
+      margin-bottom: 15px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-row label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .form-row input[type="text"],
+    .form-row select,
+    .form-row input[type="file"] {
+      padding: 8px;
+      font-size: 14px;
+      background-color: var(--input-bg);
+      color: var(--input-text);
+      border: 1px solid #ccc;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      cursor: pointer;
+      padding: 10px 20px;
+      background-color: var(--button-bg);
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background-color: var(--button-bg-hover);
+    }
+
+    /* Toggle Switch Styles */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; 
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--switch-bg-off);
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--switch-bg-on);
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    /* DARK MODE OVERRIDES */
+    body.dark-mode {
+      --primary-bg: #121212;
+      --primary-text: #ffffff;
+      --card-bg: #1e1e1e;
+      --input-bg: #2c2c2c;
+      --input-text: #ffffff;
+      --switch-bg-off: #888;
+      --switch-bg-on: #66aaff;
+      --button-bg: #3b82f6;
+      --button-bg-hover: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-wrapper">
+    <div class="container">
+      <div class="card">
+        <div class="card-content">
+          <h2>A/R Payment</h2>
+
+          <!-- Dark Mode Toggle -->
+          <div class="form-row toggle-row">
+            <label class="switch">
+              <input type="checkbox" id="darkModeSwitch">
+              <span class="slider"></span>
+            </label>
+            <label for="darkModeSwitch" style="margin-bottom: 0;">Dark Mode?</label>
+          </div>
+
+          <!-- 1) County Selection (Cobb by default) -->
+          <div class="form-row">
+            <label for="countySelect">Select County:</label>
+            <select id="countySelect">
+              <option value="Cobb" selected>Cobb</option>
+              <option value="Fulton">Fulton</option>
+              <option value="Gwinnett">Gwinnett</option>
+              <option value="DeKalb">DeKalb</option>
+            </select>
+          </div>
+
+          <!-- 2) Employee Name (Lucas by default) -->
+          <div class="form-row">
+            <label for="employeeNameSelect">Employee Name:</label>
+            <select id="employeeNameSelect">
+              <option value="Lucas" selected>Lucas</option>
+              <option value="John Doe">John Doe</option>
+              <option value="Jane Smith">Jane Smith</option>
+              <option value="Alice Johnson">Alice Johnson</option>
+              <option value="Bob Williams">Bob Williams</option>
+            </select>
+          </div>
+
+          <!-- 3) Payment Amount Input -->
+          <div class="form-row">
+            <label for="paymentAmountInput">Payment Amount ($):</label>
+            <input id="paymentAmountInput" type="text" placeholder="$0.00">
+          </div>
+
+          <!-- 4) Toggle Switch for Partial Payment -->
+          <div class="form-row toggle-row">
+            <label class="switch">
+              <input type="checkbox" id="partialPaymentSwitch">
+              <span class="slider"></span>
+            </label>
+            <label for="partialPaymentSwitch" style="margin-bottom: 0;">Partial Payment?</label>
+          </div>
+
+          <!-- 5) Actual Amount Agreed: Datalist with dynamic values up to 10,000 in increments of 25 -->
+          <!-- Shown only if the toggle switch is ON, label changes to "Actual Amount Agreed" -->
+          <div class="form-row" id="partialPaymentRow" style="display: none;">
+            <label id="partialPaymentLabel" for="partialPaymentInput">Actual Amount Agreed:</label>
+            <input id="partialPaymentInput" type="text" list="partialPaymentDataList" placeholder="$0.00">
+            <datalist id="partialPaymentDataList">
+              <!-- Will be populated in JS up to 10,000 in increments of 25 -->
+            </datalist>
+          </div>
+
+          <!-- 6) File upload for receipt -->
+          <div class="form-row">
+            <label for="receiptUpload">Upload Signed Receipt:</label>
+            <input id="receiptUpload" type="file" accept="image/*">
+          </div>
+
+          <!-- 7) Buttons -->
+          <div class="button-row">
+            <button id="saveBtn" type="button">Save</button>
+            <button id="saveAndSendBtn" type="button">Save and Send</button>
+            <button id="exportBtn" type="button">Export to Excel (CSV)</button>
+          </div>
+        </div> <!-- .card-content -->
+      </div> <!-- .card -->
+    </div> <!-- .container -->
+  </div> <!-- .container-wrapper -->
+
+  <script>
+    // References to elements
+    const darkModeSwitch = document.getElementById("darkModeSwitch");
+    const countySelect = document.getElementById("countySelect");
+    const employeeNameSelect = document.getElementById("employeeNameSelect");
+    const paymentAmountInput = document.getElementById("paymentAmountInput");
+
+    const partialPaymentSwitch = document.getElementById("partialPaymentSwitch");
+    const partialPaymentRow = document.getElementById("partialPaymentRow");
+    const partialPaymentInput = document.getElementById("partialPaymentInput");
+    const partialPaymentLabel = document.getElementById("partialPaymentLabel");
+    const partialPaymentDataList = document.getElementById("partialPaymentDataList");
+
+    const receiptUpload = document.getElementById("receiptUpload");
+
+    const saveBtn = document.getElementById("saveBtn");
+    const saveAndSendBtn = document.getElementById("saveAndSendBtn");
+    const exportBtn = document.getElementById("exportBtn");
+
+    /**
+     * Populate the datalist with values up to 10,000 in increments of 25
+     */
+    function populatePartialPaymentDataList() {
+      for (let i = 25; i <= 10000; i += 25) {
+        const optionElement = document.createElement("option");
+        // Example: "25.00"
+        optionElement.value = i.toFixed(2);
+        partialPaymentDataList.appendChild(optionElement);
+      }
+    }
+    populatePartialPaymentDataList();
+
+    /**
+     * On blur, format the input as US Dollar currency if valid
+     */
+    function formatToUSD(inputElement) {
+      let rawValue = inputElement.value.trim();
+      if (!rawValue) {
+        inputElement.value = "";
+        return;
+      }
+      // Remove any non-digit or decimal chars (e.g. $ or commas)
+      rawValue = rawValue.replace(/[^\d.]/g, "");
+      const parsedValue = parseFloat(rawValue);
+      if (!isNaN(parsedValue)) {
+        // Convert to US currency format: e.g., 1234.5 -> $1,234.50
+        inputElement.value = parsedValue.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD"
+        });
+      } else {
+        inputElement.value = "";
+      }
+    }
+
+    // Format the Payment Amount on blur
+    paymentAmountInput.addEventListener("blur", function() {
+      formatToUSD(paymentAmountInput);
+    });
+    // Format the Partial Payment Input on blur
+    partialPaymentInput.addEventListener("blur", function() {
+      formatToUSD(partialPaymentInput);
+    });
+
+    // Toggle partial payment row
+    partialPaymentSwitch.addEventListener("change", function() {
+      if (partialPaymentSwitch.checked) {
+        partialPaymentRow.style.display = "block";
+        partialPaymentLabel.textContent = "Actual Amount Agreed:";
+      } else {
+        partialPaymentRow.style.display = "none";
+      }
+    });
+
+    /**
+     * Parse a currency string in the format "$1,234.56" into a float
+     */
+    function parseCurrencyString(currencyString) {
+      if (!currencyString) {
+        return 0;
+      }
+      // Remove all non-numerical characters except decimal
+      const numericString = currencyString.replace(/[^\d.]/g, "");
+      const value = parseFloat(numericString);
+      return isNaN(value) ? 0 : value;
+    }
+
+    /**
+     * Save data to localStorage
+     */
+    function saveLocally() {
+      const countyValue = countySelect.value;
+      const employeeName = employeeNameSelect.value;
+      
+      // Convert payment amount from currency to float
+      const paymentAmount = parseCurrencyString(paymentAmountInput.value);
+
+      let partialPaymentAmount = null;
+      let partialPaymentActive = false;
+      if (partialPaymentSwitch.checked) {
+        partialPaymentActive = true;
+        partialPaymentAmount = parseCurrencyString(partialPaymentInput.value);
+      }
+
+      // Store just the file name for demo
+      let receiptFileName = "";
+      if (receiptUpload.files.length > 0) {
+        receiptFileName = receiptUpload.files[0].name;
+      }
+
+      // Build object
+      const arPaymentData = {
+        county: countyValue,
+        employeeName: employeeName,
+        paymentAmount: paymentAmount,
+        partialPayment: partialPaymentActive,
+        partialPaymentAmount: partialPaymentAmount,
+        receiptFileName: receiptFileName,
+        timestamp: new Date().toISOString()
+      };
+
+      localStorage.setItem("arPayment", JSON.stringify(arPaymentData));
+      alert("Payment data saved locally.");
+    }
+
+    /**
+     * Opens the user's email client with a mailto link
+     */
+    function sendEmail() {
+      const subject = "A/R Payment Information";
+
+      // Gather info for the email body
+      const countyValue = countySelect.value;
+      const employeeName = employeeNameSelect.value;
+      const paymentAmount = parseCurrencyString(paymentAmountInput.value);
+
+      let partialPaymentText = "No";
+      let partialPaymentDetail = "";
+      if (partialPaymentSwitch.checked) {
+        partialPaymentText = "Yes";
+        const partialAmount = parseCurrencyString(partialPaymentInput.value);
+        partialPaymentDetail = "\nActual Amount Agreed: $" + partialAmount.toFixed(2);
+      }
+
+      const body =
+        "County: " + countyValue +
+        "\nEmployee: " + employeeName +
+        "\nPayment Amount: $" + paymentAmount.toFixed(2) +
+        "\nPartial Payment: " + partialPaymentText +
+        partialPaymentDetail +
+        "\n\n(This data also saved locally in the browser.)";
+
+      // Build mailto link
+      const mailtoLink =
+        "mailto:jamieflint@bondjamesbondinc.com,ar@bondjamesbondinc.com"
+        + "?subject=" + encodeURIComponent(subject)
+        + "&body=" + encodeURIComponent(body);
+
+      window.open(mailtoLink, "_blank");
+    }
+
+    /**
+     * Export localStorage data to CSV and trigger download
+     */
+    function exportToCSV() {
+      const savedData = localStorage.getItem("arPayment");
+      if (!savedData) {
+        alert("No payment data found in localStorage to export.");
+        return;
+      }
+
+      const arPaymentData = JSON.parse(savedData);
+
+      // Define column headers
+      const headers = [
+        "County",
+        "Employee Name",
+        "Payment Amount",
+        "Partial Payment?",
+        "Actual Amount Agreed",
+        "Receipt File Name",
+        "Timestamp"
+      ];
+
+      // Build one row of data
+      const row = [
+        arPaymentData.county,
+        arPaymentData.employeeName,
+        arPaymentData.paymentAmount,         // numeric
+        arPaymentData.partialPayment ? "Yes" : "No",
+        arPaymentData.partialPaymentAmount ? arPaymentData.partialPaymentAmount : "",
+        arPaymentData.receiptFileName,
+        arPaymentData.timestamp
+      ];
+
+      // Build CSV content
+      const csvContent = [
+        headers.join(","), 
+        row.join(",")
+      ].join("\n");
+
+      // Create a Blob from the CSV content
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+
+      // Create a temporary link to download the CSV file
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "ar_payment_data.csv");
+      link.style.display = "none";
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    // Button event listeners
+    saveBtn.addEventListener("click", function() {
+      saveLocally();
+    });
+
+    saveAndSendBtn.addEventListener("click", function() {
+      saveLocally();
+      sendEmail();
+    });
+
+    exportBtn.addEventListener("click", function() {
+      exportToCSV();
+    });
+
+    // Dark Mode Toggle
+    darkModeSwitch.addEventListener("change", function() {
+      document.body.classList.toggle("dark-mode", darkModeSwitch.checked);
+    });
+  </script>
+</body>
+</html>
