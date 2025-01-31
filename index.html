@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Simple A/R Payment with Dark Mode</title>
+  <title>A/R Payment with Office Dropdown</title>
   <style>
-    /* Basic styling for container-wrapper, container, card, card-content */
     :root {
       --primary-bg: #f2f2f2;
       --primary-text: #000000;
@@ -172,7 +171,18 @@
             <label for="darkModeSwitch" style="margin-bottom: 0;">Dark Mode?</label>
           </div>
 
-          <!-- 1) County Selection (Cobb by default) -->
+          <!-- 1) Office Dropdown at the TOP (default Cobb) -->
+          <div class="form-row">
+            <label for="officeSelect">Office:</label>
+            <select id="officeSelect">
+              <option value="Cobb" selected>Cobb</option>
+              <option value="Fulton">Fulton</option>
+              <option value="Gwinnett">Gwinnett</option>
+              <option value="DeKalb">DeKalb</option>
+            </select>
+          </div>
+
+          <!-- County Selection (also defaults to Cobb) -->
           <div class="form-row">
             <label for="countySelect">Select County:</label>
             <select id="countySelect">
@@ -183,7 +193,7 @@
             </select>
           </div>
 
-          <!-- 2) Employee Name (Lucas by default) -->
+          <!-- Employee Name -->
           <div class="form-row">
             <label for="employeeNameSelect">Employee Name:</label>
             <select id="employeeNameSelect">
@@ -195,13 +205,13 @@
             </select>
           </div>
 
-          <!-- 3) Payment Amount Input -->
+          <!-- Payment Amount -->
           <div class="form-row">
             <label for="paymentAmountInput">Payment Amount ($):</label>
             <input id="paymentAmountInput" type="text" placeholder="$0.00">
           </div>
 
-          <!-- 4) Toggle Switch for Partial Payment -->
+          <!-- Toggle Switch for Partial Payment -->
           <div class="form-row toggle-row">
             <label class="switch">
               <input type="checkbox" id="partialPaymentSwitch">
@@ -210,27 +220,27 @@
             <label for="partialPaymentSwitch" style="margin-bottom: 0;">Partial Payment?</label>
           </div>
 
-          <!-- 5) Actual Amount Agreed: Datalist with dynamic values up to 10,000 in increments of 25 -->
-          <!-- Shown only if the toggle switch is ON, label changes to "Actual Amount Agreed" -->
+          <!-- Actual Amount Agreed -->
           <div class="form-row" id="partialPaymentRow" style="display: none;">
             <label id="partialPaymentLabel" for="partialPaymentInput">Actual Amount Agreed:</label>
             <input id="partialPaymentInput" type="text" list="partialPaymentDataList" placeholder="$0.00">
             <datalist id="partialPaymentDataList">
-              <!-- Will be populated in JS up to 10,000 in increments of 25 -->
+              <!-- Populated in JS -->
             </datalist>
           </div>
 
-          <!-- 6) File upload for receipt -->
+          <!-- Multiple File Upload -->
           <div class="form-row">
-            <label for="receiptUpload">Upload Signed Receipt:</label>
-            <input id="receiptUpload" type="file" accept="image/*">
+            <label for="receiptUpload">Upload Signed Receipts (Multiple):</label>
+            <input id="receiptUpload" type="file" accept="image/*" multiple>
           </div>
 
-          <!-- 7) Buttons -->
+          <!-- Buttons -->
           <div class="button-row">
             <button id="saveBtn" type="button">Save</button>
             <button id="saveAndSendBtn" type="button">Save and Send</button>
             <button id="exportBtn" type="button">Export to Excel (CSV)</button>
+            <button id="saveToPhpBtn" type="button">Save to PHP/MySQL</button>
           </div>
         </div> <!-- .card-content -->
       </div> <!-- .card -->
@@ -238,8 +248,9 @@
   </div> <!-- .container-wrapper -->
 
   <script>
-    // References to elements
+    // =============== References ===============
     const darkModeSwitch = document.getElementById("darkModeSwitch");
+    const officeSelect = document.getElementById("officeSelect");
     const countySelect = document.getElementById("countySelect");
     const employeeNameSelect = document.getElementById("employeeNameSelect");
     const paymentAmountInput = document.getElementById("paymentAmountInput");
@@ -255,34 +266,29 @@
     const saveBtn = document.getElementById("saveBtn");
     const saveAndSendBtn = document.getElementById("saveAndSendBtn");
     const exportBtn = document.getElementById("exportBtn");
+    const saveToPhpBtn = document.getElementById("saveToPhpBtn");  // new button
 
-    /**
-     * Populate the datalist with values up to 10,000 in increments of 25
-     */
+    // =============== Data List for partial payment up to 10,000 in increments of 25 ===============
     function populatePartialPaymentDataList() {
       for (let i = 25; i <= 10000; i += 25) {
         const optionElement = document.createElement("option");
-        // Example: "25.00"
         optionElement.value = i.toFixed(2);
         partialPaymentDataList.appendChild(optionElement);
       }
     }
     populatePartialPaymentDataList();
 
-    /**
-     * On blur, format the input as US Dollar currency if valid
-     */
+    // =============== Format currency on blur ===============
     function formatToUSD(inputElement) {
       let rawValue = inputElement.value.trim();
       if (!rawValue) {
         inputElement.value = "";
         return;
       }
-      // Remove any non-digit or decimal chars (e.g. $ or commas)
+      // Remove any non-digit or decimal chars (like $, commas)
       rawValue = rawValue.replace(/[^\d.]/g, "");
       const parsedValue = parseFloat(rawValue);
       if (!isNaN(parsedValue)) {
-        // Convert to US currency format: e.g., 1234.5 -> $1,234.50
         inputElement.value = parsedValue.toLocaleString("en-US", {
           style: "currency",
           currency: "USD"
@@ -292,11 +298,9 @@
       }
     }
 
-    // Format the Payment Amount on blur
     paymentAmountInput.addEventListener("blur", function() {
       formatToUSD(paymentAmountInput);
     });
-    // Format the Partial Payment Input on blur
     partialPaymentInput.addEventListener("blur", function() {
       formatToUSD(partialPaymentInput);
     });
@@ -311,64 +315,56 @@
       }
     });
 
-    /**
-     * Parse a currency string in the format "$1,234.56" into a float
-     */
+    // Parse currency from a string like "$1,234.56" to float 1234.56
     function parseCurrencyString(currencyString) {
       if (!currencyString) {
         return 0;
       }
-      // Remove all non-numerical characters except decimal
       const numericString = currencyString.replace(/[^\d.]/g, "");
       const value = parseFloat(numericString);
       return isNaN(value) ? 0 : value;
     }
 
-    /**
-     * Save data to localStorage
-     */
+    // =============== Save Locally ===============
     function saveLocally() {
+      const officeValue = officeSelect.value;
       const countyValue = countySelect.value;
       const employeeName = employeeNameSelect.value;
-      
-      // Convert payment amount from currency to float
       const paymentAmount = parseCurrencyString(paymentAmountInput.value);
 
-      let partialPaymentAmount = null;
       let partialPaymentActive = false;
+      let partialPaymentAmount = null;
       if (partialPaymentSwitch.checked) {
         partialPaymentActive = true;
         partialPaymentAmount = parseCurrencyString(partialPaymentInput.value);
       }
 
-      // Store just the file name for demo
-      let receiptFileName = "";
-      if (receiptUpload.files.length > 0) {
-        receiptFileName = receiptUpload.files[0].name;
+      const files = receiptUpload.files;
+      let fileNamesArray = [];
+      for (let i = 0; i < files.length; i++) {
+        fileNamesArray.push(files[i].name);
       }
 
-      // Build object
       const arPaymentData = {
+        office: officeValue,
         county: countyValue,
         employeeName: employeeName,
         paymentAmount: paymentAmount,
         partialPayment: partialPaymentActive,
         partialPaymentAmount: partialPaymentAmount,
-        receiptFileName: receiptFileName,
+        receiptFileNames: fileNamesArray,
         timestamp: new Date().toISOString()
       };
 
       localStorage.setItem("arPayment", JSON.stringify(arPaymentData));
-      alert("Payment data saved locally.");
+      alert("Payment data (including office) saved locally.");
     }
 
-    /**
-     * Opens the user's email client with a mailto link
-     */
+    // =============== Send Email ===============
     function sendEmail() {
       const subject = "A/R Payment Information";
 
-      // Gather info for the email body
+      const officeValue = officeSelect.value;
       const countyValue = countySelect.value;
       const employeeName = employeeNameSelect.value;
       const paymentAmount = parseCurrencyString(paymentAmountInput.value);
@@ -381,15 +377,25 @@
         partialPaymentDetail = "\nActual Amount Agreed: $" + partialAmount.toFixed(2);
       }
 
+      const files = receiptUpload.files;
+      let multipleFileNames = "";
+      if (files.length > 0) {
+        multipleFileNames = "\nAttached File Names:";
+        for (let i = 0; i < files.length; i++) {
+          multipleFileNames += "\n - " + files[i].name;
+        }
+      }
+
       const body =
-        "County: " + countyValue +
+        "Office: " + officeValue +
+        "\nCounty: " + countyValue +
         "\nEmployee: " + employeeName +
         "\nPayment Amount: $" + paymentAmount.toFixed(2) +
         "\nPartial Payment: " + partialPaymentText +
         partialPaymentDetail +
+        multipleFileNames +
         "\n\n(This data also saved locally in the browser.)";
 
-      // Build mailto link
       const mailtoLink =
         "mailto:jamieflint@bondjamesbondinc.com,ar@bondjamesbondinc.com"
         + "?subject=" + encodeURIComponent(subject)
@@ -398,9 +404,7 @@
       window.open(mailtoLink, "_blank");
     }
 
-    /**
-     * Export localStorage data to CSV and trigger download
-     */
+    // =============== Export to CSV ===============
     function exportToCSV() {
       const savedData = localStorage.getItem("arPayment");
       if (!savedData) {
@@ -410,38 +414,39 @@
 
       const arPaymentData = JSON.parse(savedData);
 
-      // Define column headers
+      let joinedFileNames = "";
+      if (Array.isArray(arPaymentData.receiptFileNames)) {
+        joinedFileNames = arPaymentData.receiptFileNames.join(";");
+      }
+
       const headers = [
+        "Office",
         "County",
         "Employee Name",
         "Payment Amount",
         "Partial Payment?",
         "Actual Amount Agreed",
-        "Receipt File Name",
+        "Receipt File Names",
         "Timestamp"
       ];
 
-      // Build one row of data
       const row = [
+        arPaymentData.office,
         arPaymentData.county,
         arPaymentData.employeeName,
-        arPaymentData.paymentAmount,         // numeric
+        arPaymentData.paymentAmount,
         arPaymentData.partialPayment ? "Yes" : "No",
         arPaymentData.partialPaymentAmount ? arPaymentData.partialPaymentAmount : "",
-        arPaymentData.receiptFileName,
+        joinedFileNames,
         arPaymentData.timestamp
       ];
 
-      // Build CSV content
       const csvContent = [
-        headers.join(","), 
+        headers.join(","),
         row.join(",")
       ].join("\n");
 
-      // Create a Blob from the CSV content
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-
-      // Create a temporary link to download the CSV file
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
@@ -454,7 +459,59 @@
       URL.revokeObjectURL(url);
     }
 
-    // Button event listeners
+    // =============== Save to PHP/MySQL ===============
+    function saveToPHP() {
+      // Gather data just like we do in saveLocally()
+      const officeValue = officeSelect.value;
+      const countyValue = countySelect.value;
+      const employeeName = employeeNameSelect.value;
+      const paymentAmount = parseCurrencyString(paymentAmountInput.value);
+
+      let partialPaymentActive = false;
+      let partialPaymentAmount = null;
+      if (partialPaymentSwitch.checked) {
+        partialPaymentActive = true;
+        partialPaymentAmount = parseCurrencyString(partialPaymentInput.value);
+      }
+
+      const files = receiptUpload.files;
+      let fileNamesArray = [];
+      for (let i = 0; i < files.length; i++) {
+        fileNamesArray.push(files[i].name);
+      }
+
+      // Build object to send to PHP
+      const arPaymentData = {
+        office: officeValue,
+        county: countyValue,
+        employeeName: employeeName,
+        paymentAmount: paymentAmount,
+        partialPayment: partialPaymentActive,
+        partialPaymentAmount: partialPaymentAmount,
+        receiptFileNames: fileNamesArray
+      };
+
+      // POST JSON to save_payment.php
+      fetch("save_payment.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(arPaymentData)
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            alert("Payment saved in MySQL! Payment ID: " + result.paymentId);
+          } else {
+            alert("Error saving payment: " + result.error);
+          }
+        })
+        .catch(error => {
+          console.error("Fetch error:", error);
+          alert("Fetch error: " + error.message);
+        });
+    }
+
+    // =============== Button handlers ===============
     saveBtn.addEventListener("click", function() {
       saveLocally();
     });
@@ -468,7 +525,12 @@
       exportToCSV();
     });
 
-    // Dark Mode Toggle
+    // new button that calls the PHP script
+    saveToPhpBtn.addEventListener("click", function() {
+      saveToPHP();
+    });
+
+    // Dark Mode
     darkModeSwitch.addEventListener("change", function() {
       document.body.classList.toggle("dark-mode", darkModeSwitch.checked);
     });
