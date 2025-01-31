@@ -769,17 +769,14 @@
       });
     }
 
-    // =============== Export Custom XLS ===============
-    function exportCustomXLS(agentName, officeName) {
-      // ... existing function from your snippet ...
+    function exportCustomXLS(dateVal, agentName, officeName) {
       // This function loads "dailyPayments" from localStorage, builds an HTML-based .xls, etc.
-
       const stored = localStorage.getItem("dailyPayments");
       if (!stored) {
         alert("No daily payments found in localStorage.");
         return;
       }
-      const dailyPayments = JSON.parse(stored); // array of payment objects
+      const dailyPayments = JSON.parse(stored);
 
       if (dailyPayments.length === 0) {
         alert("No daily payment records to export.");
@@ -792,12 +789,20 @@
       let mm = String(now.getMonth() + 1).padStart(2, "0");
       let dd = String(now.getDate()).padStart(2, "0");
       let yyyy = now.getFullYear();
+
+      // If you want to use the first record's county or office name in the file name:
       const countyForFileName = dailyPayments[0].county || officeName;
       const fileName = `${mm}-${dd}-${yyyy}-DailyPaymentLog-${agentName}-${countyForFileName}.xls`;
 
+      // Build the HTML snippet
       let htmlContent = `
         <h1 style="text-align:center;">Daily Payment Log</h1>
-        <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;">
+        <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; text-align:center;">
+          <!-- Date Row -->
+          <tr>
+            <td><strong>Date:</strong></td>
+            <td>${dateVal}</td>
+          </tr>
           <!-- Row 1: Agent Name -->
           <tr>
             <td><strong>Agent Name:</strong></td>
@@ -824,6 +829,7 @@
           </tr>
       `;
 
+      // Add payment rows
       dailyPayments.forEach(payment => {
         totalCash += payment.cash || 0;
         totalCheck += payment.check || 0;
@@ -848,6 +854,7 @@
         `;
       });
 
+      // Totals + deposit row
       htmlContent += `
           <tr><td colspan="9" style="height:10px;"></td></tr>
           <tr style="background-color:#eee;">
@@ -875,10 +882,12 @@
         </table>
       `;
 
+      // Create a Blob for the .xls
       const blob = new Blob([htmlContent], {
         type: "application/vnd.ms-excel;charset=utf-8"
       });
 
+      // Trigger download
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -888,189 +897,203 @@
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     }
-    function exportDailyLogXlsx(agentName, officeName, dailyPayments) {
-  // We'll build an array of arrays (AoA) that structure your rows:
-  // Row 1: "Daily Payment Log" (big merged cell across columns A..I)
-  // Row 2: [Agent Name, agentName]
-  // Row 3: [Office, officeName]
-  // Row 4: blank
-  // Row 5: headers
-  // Row 6..N: data
-  // Next row: blank
-  // Next row: Totals
-  // Next row: deposit
 
-  const rows = [];
+    // =============== .XLSX (SheetJS) Export ===============
+    function exportDailyLogXlsx(dateValue, agentName, officeName, dailyPayments) {
+      // We'll build an array of arrays (rows) for the final XLSX:
 
-  // Row 1: single cell "Daily Payment Log", we will merge columns A..I
-  rows.push(["Daily Payment Log"]); // we'll merge this across multiple columns
+      const rows = [];
 
-  // Row 2: agent name
-  rows.push(["Agent Name:", agentName]);
+      // Row 1: single cell "Daily Payment Log" across columns A..I
+      rows.push(["Daily Payment Log"]); // merged row
 
-  // Row 3: office
-  rows.push(["Office:", officeName]);
+      // Row 2: date
+      rows.push(["Date:", dateValue]);
 
-  // Row 4: blank
-  rows.push([]);
+      // Row 3: agent name
+      rows.push(["Agent Name:", agentName]);
 
-  // Row 5: column headers (like your HTML approach)
-  rows.push([
-    "Date",
-    "Defendant Name",
-    "County",
-    "Cash",
-    "Check",
-    "Money Order",
-    "Credit Card",
-    "Partial Pmt (Y/N)",
-    "Actual Amt Due"
-  ]);
+      // Row 4: office
+      rows.push(["Office:", officeName]);
 
-  // Keep track of totals
-  let totalCash = 0, totalCheck = 0, totalMO = 0, totalCC = 0;
+      // Row 5: blank
+      rows.push([]);
 
-  // Rows for each payment
-  dailyPayments.forEach(payment => {
-    const dateVal = payment.date || "";
-    const defName = payment.defendantName || "";
-    const county = payment.county || "";
-    const cash = payment.cash || 0;
-    const check = payment.check || 0;
-    const moneyOrder = payment.moneyOrder || 0;
-    const creditCard = payment.creditCard || 0;
-    const partialYesNo = payment.partialPayment ? "Y" : "N";
-    const actualDue = payment.actualAmtDue || 0;
+      // Row 6: column headers (like your HTML approach)
+      rows.push([
+        "Date",
+        "Defendant Name",
+        "County",
+        "Cash",
+        "Check",
+        "Money Order",
+        "Credit Card",
+        "Partial Pmt (Y/N)",
+        "Actual Amt Due"
+      ]);
 
-    rows.push([
-      dateVal,
-      defName,
-      county,
-      cash,
-      check,
-      moneyOrder,
-      creditCard,
-      partialYesNo,
-      actualDue
-    ]);
+      // Keep track of totals
+      let totalCash = 0, totalCheck = 0, totalMO = 0, totalCC = 0;
 
-    // accumulate totals
-    totalCash += cash;
-    totalCheck += check;
-    totalMO += moneyOrder;
-    totalCC += creditCard;
-  });
+      // Rows for each payment
+      dailyPayments.forEach(payment => {
+        const dateVal = payment.date || "";
+        const defName = payment.defendantName || "";
+        const county = payment.county || "";
+        const cash = payment.cash || 0;
+        const check = payment.check || 0;
+        const moneyOrder = payment.moneyOrder || 0;
+        const creditCard = payment.creditCard || 0;
+        const partialYesNo = payment.partialPayment ? "Y" : "N";
+        const actualDue = payment.actualAmtDue || 0;
 
-  // Blank row after data
-  rows.push([]);
+        rows.push([
+          dateVal,
+          defName,
+          county,
+          cash,
+          check,
+          moneyOrder,
+          creditCard,
+          partialYesNo,
+          actualDue
+        ]);
 
-  // Totals row
-  rows.push([
-    "", 
-    "Totals",
-    "", 
-    totalCash, 
-    totalCheck, 
-    totalMO, 
-    totalCC, 
-    "", 
-    ""
-  ]);
+        // accumulate totals
+        totalCash += cash;
+        totalCheck += check;
+        totalMO += moneyOrder;
+        totalCC += creditCard;
+      });
 
-  // Deposit row
-  rows.push([
-    "", 
-    "Amount to be deposited",
-    "",
-    totalCash,
-    "",
-    "",
-    "",
-    "",
-    ""
-  ]);
+      // Blank row after data
+      rows.push([]);
 
-  // 2) Convert to a Sheet
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+      // Totals row
+      rows.push([
+        "", 
+        "Totals",
+        "", 
+        totalCash, 
+        totalCheck, 
+        totalMO, 
+        totalCC, 
+        "", 
+        ""
+      ]);
 
-  // 3) ADD MERGES to replicate the "merged top row" look
-  // We'll merge row 1 (which is index 0) from column A (c=0) to column I (c=8)
-  // That means s = start, e = end
-  ws["!merges"] = [
-    { s: {r:0, c:0}, e: {r:0, c:8} }  // merges row 0's columns 0..8
-  ];
+      // Deposit row
+      rows.push([
+        "", 
+        "Amount to be deposited",
+        "",
+        totalCash,
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]);
 
-  // (Optional) You can add more merges or do specialized style if you have the Pro version of SheetJS
+      // 1) Convert to a Sheet
+      const ws = XLSX.utils.aoa_to_sheet(rows);
 
-  // 4) Create a new workbook and append the sheet
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Daily Payment Log");
+      // 2) Center + border from row 5 down
+      const startRowIndex = 5 - 1; // row 5 is index 4
+      const endRowIndex = rows.length - 1;
+      const totalCols = 9; // A..I => 0..8
 
-  // 5) Build a file name
-  // e.g., "01-31-2025-DailyPaymentLog-Lucas-Cobb.xlsx"
-  const today = new Date();
-  let mm = String(today.getMonth() + 1).padStart(2, "0");
-  let dd = String(today.getDate()).padStart(2, "0");
-  let yyyy = today.getFullYear();
-  const fileName = `${mm}-${dd}-${yyyy}-DailyPaymentLog-${agentName}-${officeName}.xlsx`;
+      for (let R = startRowIndex; R <= endRowIndex; R++) {
+        for (let C = 0; C < totalCols; C++) {
+          const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!ws[cellRef]) continue; // skip if cell doesn't exist
+          if (!ws[cellRef].s) ws[cellRef].s = {};
 
-  // 6) Write the file
-  XLSX.writeFile(wb, fileName);
-}
+          ws[cellRef].s.alignment = { horizontal: "center" };
+          ws[cellRef].s.border = {
+            top: { style: "thin", color: { rgb: "000000" } },
+            right: { style: "thin", color: { rgb: "000000" } },
+            bottom: { style: "thin", color: { rgb: "000000" } },
+            left: { style: "thin", color: { rgb: "000000" } },
+          };
+        }
+      }
 
+      // Merge row 1 across columns A..I
+      ws["!merges"] = [
+        { s: {r:0, c:0}, e: {r:0, c:8} }
+      ];
 
-  // =============== Button handlers ===============
-  exportXlsBtn.addEventListener("click", function() {
-    // If you want to do an HTML-based .xls approach, call your existing function here
-    const agent = employeeNameSelect.value;
-    const officeName = officeSelect.value;
-    exportCustomXLS(agent, officeName);
-  });
+      // Style the big title in A1
+      ws["A1"].s = {
+        alignment: { horizontal: "center" },
+        font: { bold: true, sz: 16 }
+      };
 
-  // ADD THIS LISTENER: Export to XLSX
-  exportXlsxBtn.addEventListener("click", function() {
-    // 1) Load dailyPayments from localStorage
-    const stored = localStorage.getItem("dailyPayments");
-    if (!stored) {
-      alert("No daily payments found in localStorage to export as XLSX.");
-      return;
-    }
-    const dailyPayments = JSON.parse(stored);
-    if (!Array.isArray(dailyPayments) || dailyPayments.length === 0) {
-      alert("No records in dailyPayments to export.");
-      return;
+      // 3) Create a new workbook and append the sheet
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Daily Payment Log");
+
+      // 4) Build a file name
+      const safeDate = (dateValue || "NoDate").replace(/\//g, "-");
+      const fileName = `${safeDate}-DailyPaymentLog-${agentName}-${officeName}.xlsx`;
+
+      // 5) Write the file
+      XLSX.writeFile(wb, fileName);
     }
 
-    // 2) Gather date, employee, office
-    const dateValue = paymentDateInput.value.trim() || "NoDate";
-    const employeeName = employeeNameSelect.value || "UnknownEmployee";
-    const officeValueName = officeSelect.value || "UnknownOffice";
+    // =============== Button handlers ===============
+    exportXlsBtn.addEventListener("click", function() {
+      // Now we also pass the date to .xls snippet
+      const dateVal = paymentDateInput.value.trim() || "NoDate";
+      const agent = employeeNameSelect.value;
+      const officeName = officeSelect.value;
+      exportCustomXLS(dateVal, agent, officeName);
+    });
 
-    // 3) Call the XLSX export
-    exportDailyLogXlsx(dateValue, employeeName, officeValueName, dailyPayments);
-  });
+    exportXlsxBtn.addEventListener("click", function() {
+      // 1) load dailyPayments from localStorage
+      const stored = localStorage.getItem("dailyPayments");
+      if (!stored) {
+        alert("No daily payments found in localStorage.");
+        return;
+      }
+      const dailyPayments = JSON.parse(stored);
+      if (dailyPayments.length === 0) {
+        alert("No daily payment records to export.");
+        return;
+      }
 
-  saveBtn.addEventListener("click", function() {
-    saveLocally();
-  });
+      // 2) read date, agent, office from your form
+      const dateValue = paymentDateInput.value.trim() || "NoDate";
+      const agentName = employeeNameSelect.value;
+      const officeName = officeSelect.value;
 
-  saveAndSendBtn.addEventListener("click", function() {
-    saveLocally();
-    sendEmail();
-  });
+      // 3) call the XLSX export function
+      exportDailyLogXlsx(dateValue, agentName, officeName, dailyPayments);
+    });
 
-  exportBtn.addEventListener("click", function() {
-    exportToCSV();
-  });
+    saveBtn.addEventListener("click", function() {
+      saveLocally();
+    });
 
-  saveToPhpBtn.addEventListener("click", function() {
-    saveToPHP();
-  });
+    saveAndSendBtn.addEventListener("click", function() {
+      saveLocally();
+      sendEmail();
+    });
 
-  // Dark Mode
-  darkModeSwitch.addEventListener("change", function() {
-    document.body.classList.toggle("dark-mode", darkModeSwitch.checked);
-  });
-</script>
+    exportBtn.addEventListener("click", function() {
+      exportToCSV();
+    });
+
+    saveToPhpBtn.addEventListener("click", function() {
+      saveToPHP();
+    });
+
+    // Dark Mode
+    darkModeSwitch.addEventListener("change", function() {
+      document.body.classList.toggle("dark-mode", darkModeSwitch.checked);
+    });
+  </script>
 </body>
 </html>
