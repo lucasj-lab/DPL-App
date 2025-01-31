@@ -95,7 +95,6 @@
       border-radius: 4px;
       font-size: 14px;
     }
-
     button:hover {
       background-color: var(--button-bg-hover);
     }
@@ -153,6 +152,24 @@
       --button-bg: #3b82f6;
       --button-bg-hover: #2563eb;
     }
+
+    /* Split Payment Container */
+    .split-payment-container {
+      border: 1px solid #ccc;
+      background-color: var(--input-bg);
+      padding: 10px;
+      margin-top: 8px;
+      display: none;
+    }
+    .split-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .split-row select,
+    .split-row input[type="text"] {
+      width: 150px;
+    }
   </style>
 </head>
 <body>
@@ -171,28 +188,7 @@
             <label for="darkModeSwitch" style="margin-bottom: 0;">Dark Mode?</label>
           </div>
 
-          <!-- 1) Office Dropdown at the TOP (default Cobb) -->
-          <div class="form-row">
-            <label for="officeSelect">Office:</label>
-            <select id="officeSelect">
-              <option value="Cobb" selected>Cobb</option>
-              <option value="Fulton">Fulton</option>
-              <option value="Gwinnett">Gwinnett</option>
-              <option value="DeKalb">DeKalb</option>
-            </select>
-          </div>
-
-          <!-- County Selection (also defaults to Cobb) -->
-          <div class="form-row">
-            <label for="countySelect">Select County:</label>
-            <select id="countySelect">
-              <option value="Cobb" selected>Cobb</option>
-              <option value="Fulton">Fulton</option>
-              <option value="Gwinnett">Gwinnett</option>
-              <option value="DeKalb">DeKalb</option>
-            </select>
-          </div>
-
+          
           <!-- Employee Name -->
           <div class="form-row">
             <label for="employeeNameSelect">Employee Name:</label>
@@ -205,10 +201,68 @@
             </select>
           </div>
 
-          <!-- Payment Amount -->
+          <!-- 1) Office Dropdown at the TOP (default Cobb) -->
           <div class="form-row">
+            <label for="officeSelect">Office:</label>
+            <select id="officeSelect">
+              <option value="Cobb" selected>Cobb</option>
+              <option value="Fulton">Fulton</option>
+              <option value="Gwinnett">Gwinnett</option>
+              <option value="DeKalb">DeKalb</option>
+            </select>
+          </div>
+
+       
+
+          <!-- ADDITIONS: Date (left), Defendant Name (right) -->
+          <div class="form-row" style="flex-direction: row; gap: 20px;">
+            <!-- Date (MM/DD/YYYY) -->
+            <div style="flex: 1;">
+              <label for="paymentDateInput">Date:</label><br>
+              <input id="paymentDateInput" type="text" placeholder="MM/DD/YYYY">
+            </div>
+            <!-- Defendant Name -->
+            <div style="flex: 1;">
+              <label for="defendantNameInput">Defendant Name:</label>
+              <input id="defendantNameInput" type="text" placeholder="Defendant Name">
+            </div>
+          </div>
+
+             <!-- County Selection (also defaults to Cobb) -->
+             <div class="form-row">
+              <label for="countySelect">Select County:</label>
+              <select id="countySelect">
+                <option value="Cobb" selected>Cobb</option>
+                <option value="Fulton">Fulton</option>
+                <option value="Gwinnett">Gwinnett</option>
+                <option value="DeKalb">DeKalb</option>
+              </select>
+            </div>
+  
+
+          <!-- Payment Type Dropdown -->
+          <div class="form-row">
+            <label for="paymentTypeSelect">Payment Type:</label>
+            <select id="paymentTypeSelect">
+              <option value="Cash">Cash</option>
+              <option value="Check">Check</option>
+              <option value="Money Order">Money Order</option>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Split Payment">Split Payment</option>
+            </select>
+          </div>
+
+          <!-- Single Payment Row (shown unless "Split Payment" is chosen) -->
+          <div class="form-row" id="singlePaymentRow">
             <label for="paymentAmountInput">Payment Amount ($):</label>
             <input id="paymentAmountInput" type="text" placeholder="$0.00">
+          </div>
+
+          <!-- Split Payment Container (only if "Split Payment") -->
+          <div class="split-payment-container" id="splitPaymentContainer">
+            <p style="margin-top:0; font-weight:bold;">Split Payment Details:</p>
+            <div id="splitRows"></div>
+            <button type="button" id="addSplitRowBtn" style="margin-top:5px;">+ Add Payment Method</button>
           </div>
 
           <!-- Toggle Switch for Partial Payment -->
@@ -222,7 +276,7 @@
 
           <!-- Actual Amount Agreed -->
           <div class="form-row" id="partialPaymentRow" style="display: none;">
-            <label id="partialPaymentLabel" for="partialPaymentInput">Actual Amount Agreed:</label>
+            <label id="partialPaymentLabel" for="partialPaymentInput">Actual Amount Due:</label>
             <input id="partialPaymentInput" type="text" list="partialPaymentDataList" placeholder="$0.00">
             <datalist id="partialPaymentDataList">
               <!-- Populated in JS -->
@@ -253,7 +307,16 @@
     const officeSelect = document.getElementById("officeSelect");
     const countySelect = document.getElementById("countySelect");
     const employeeNameSelect = document.getElementById("employeeNameSelect");
+    const paymentDateInput = document.getElementById("paymentDateInput");
+    const defendantNameInput = document.getElementById("defendantNameInput");
+
+    const paymentTypeSelect = document.getElementById("paymentTypeSelect");
+    const singlePaymentRow = document.getElementById("singlePaymentRow");
     const paymentAmountInput = document.getElementById("paymentAmountInput");
+
+    const splitPaymentContainer = document.getElementById("splitPaymentContainer");
+    const splitRowsContainer = document.getElementById("splitRows");
+    const addSplitRowBtn = document.getElementById("addSplitRowBtn");
 
     const partialPaymentSwitch = document.getElementById("partialPaymentSwitch");
     const partialPaymentRow = document.getElementById("partialPaymentRow");
@@ -266,9 +329,19 @@
     const saveBtn = document.getElementById("saveBtn");
     const saveAndSendBtn = document.getElementById("saveAndSendBtn");
     const exportBtn = document.getElementById("exportBtn");
-    const saveToPhpBtn = document.getElementById("saveToPhpBtn");  // new button
+    const saveToPhpBtn = document.getElementById("saveToPhpBtn");
 
-    // =============== Data List for partial payment up to 10,000 in increments of 25 ===============
+    // =============== AUTO-SET DATE IN MM/DD/YYYY ===============
+    window.addEventListener("load", function() {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      let mm = (today.getMonth() + 1).toString().padStart(2, "0");
+      let dd = today.getDate().toString().padStart(2, "0");
+      // e.g. "02/05/2025"
+      paymentDateInput.value = `${mm}/${dd}/${yyyy}`;
+    });
+
+    // =============== PARTIAL PAYMENT LIST (25 increments) ===============
     function populatePartialPaymentDataList() {
       for (let i = 25; i <= 10000; i += 25) {
         const optionElement = document.createElement("option");
@@ -305,17 +378,17 @@
       formatToUSD(partialPaymentInput);
     });
 
-    // Toggle partial payment row
+    // =============== TOGGLE PARTIAL PAYMENT ROW ===============
     partialPaymentSwitch.addEventListener("change", function() {
       if (partialPaymentSwitch.checked) {
         partialPaymentRow.style.display = "block";
-        partialPaymentLabel.textContent = "Actual Amount Agreed:";
+        partialPaymentLabel.textContent = "Actual Amount Due:";
       } else {
         partialPaymentRow.style.display = "none";
       }
     });
 
-    // Parse currency from a string like "$1,234.56" to float 1234.56
+    // Parse currency from "$1,234.56" to float 1234.56
     function parseCurrencyString(currencyString) {
       if (!currencyString) {
         return 0;
@@ -325,12 +398,89 @@
       return isNaN(value) ? 0 : value;
     }
 
-    // =============== Save Locally ===============
+    // =============== SPLIT PAYMENT HANDLING ===============
+    paymentTypeSelect.addEventListener("change", function() {
+      if (paymentTypeSelect.value === "Split Payment") {
+        singlePaymentRow.style.display = "none";
+        splitPaymentContainer.style.display = "block";
+
+        // If no rows yet, add 2 default rows
+        if (splitRowsContainer.children.length === 0) {
+          addSplitRow();
+          addSplitRow();
+        }
+      } else {
+        // Normal single payment
+        singlePaymentRow.style.display = "block";
+        splitPaymentContainer.style.display = "none";
+      }
+    });
+
+    // Payment types for each split row (excluding "Split Payment" itself)
+    const paymentTypes = ["Cash", "Check", "Money Order", "Credit Card"];
+
+    addSplitRowBtn.addEventListener("click", function() {
+      addSplitRow();
+    });
+
+    function addSplitRow() {
+      const rowDiv = document.createElement("div");
+      rowDiv.classList.add("split-row");
+
+      // Payment Type select
+      const selectEl = document.createElement("select");
+      paymentTypes.forEach(pt => {
+        const opt = document.createElement("option");
+        opt.value = pt;
+        opt.textContent = pt;
+        selectEl.appendChild(opt);
+      });
+
+      // Amount input
+      const amountInput = document.createElement("input");
+      amountInput.type = "text";
+      amountInput.placeholder = "$0.00";
+      amountInput.addEventListener("blur", function() {
+        formatToUSD(amountInput);
+      });
+
+      // Remove button
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.textContent = "Remove";
+      removeBtn.style.backgroundColor = "#d9534f";
+      removeBtn.addEventListener("click", function() {
+        rowDiv.remove();
+      });
+
+      rowDiv.appendChild(selectEl);
+      rowDiv.appendChild(amountInput);
+      rowDiv.appendChild(removeBtn);
+      splitRowsContainer.appendChild(rowDiv);
+    }
+
+    // =============== SAVE LOCALLY ===============
     function saveLocally() {
       const officeValue = officeSelect.value;
       const countyValue = countySelect.value;
       const employeeName = employeeNameSelect.value;
-      const paymentAmount = parseCurrencyString(paymentAmountInput.value);
+      const dateValue = paymentDateInput.value.trim();
+      const defendantName = defendantNameInput.value.trim();
+
+      let paymentAmount = 0;
+      let isSplit = (paymentTypeSelect.value === "Split Payment");
+
+      if (isSplit) {
+        // Sum the amounts from each split row
+        const rowDivs = splitRowsContainer.querySelectorAll(".split-row");
+        rowDivs.forEach(div => {
+          const amtInput = div.querySelector("input[type='text']");
+          paymentAmount += parseCurrencyString(amtInput.value);
+        });
+      } else {
+        // Single payment
+        paymentAmount = parseCurrencyString(paymentAmountInput.value);
+      }
 
       let partialPaymentActive = false;
       let partialPaymentAmount = null;
@@ -339,6 +489,7 @@
         partialPaymentAmount = parseCurrencyString(partialPaymentInput.value);
       }
 
+      // Multiple file names
       const files = receiptUpload.files;
       let fileNamesArray = [];
       for (let i = 0; i < files.length; i++) {
@@ -349,6 +500,9 @@
         office: officeValue,
         county: countyValue,
         employeeName: employeeName,
+        date: dateValue,
+        defendantName: defendantName,
+        paymentType: paymentTypeSelect.value,
         paymentAmount: paymentAmount,
         partialPayment: partialPaymentActive,
         partialPaymentAmount: partialPaymentAmount,
@@ -357,24 +511,37 @@
       };
 
       localStorage.setItem("arPayment", JSON.stringify(arPaymentData));
-      alert("Payment data (including office) saved locally.");
+      alert("Payment data (including office, date, defendant name, and split or single payment) saved locally.");
     }
 
-    // =============== Send Email ===============
+    // =============== SEND EMAIL ===============
     function sendEmail() {
       const subject = "A/R Payment Information";
 
       const officeValue = officeSelect.value;
       const countyValue = countySelect.value;
       const employeeName = employeeNameSelect.value;
-      const paymentAmount = parseCurrencyString(paymentAmountInput.value);
+      const dateValue = paymentDateInput.value;
+      const defendantName = defendantNameInput.value;
+
+      let paymentAmount = 0;
+      let isSplit = (paymentTypeSelect.value === "Split Payment");
+      if (isSplit) {
+        const rowDivs = splitRowsContainer.querySelectorAll(".split-row");
+        rowDivs.forEach(div => {
+          const amtInput = div.querySelector("input[type='text']");
+          paymentAmount += parseCurrencyString(amtInput.value);
+        });
+      } else {
+        paymentAmount = parseCurrencyString(paymentAmountInput.value);
+      }
 
       let partialPaymentText = "No";
       let partialPaymentDetail = "";
       if (partialPaymentSwitch.checked) {
         partialPaymentText = "Yes";
         const partialAmount = parseCurrencyString(partialPaymentInput.value);
-        partialPaymentDetail = "\nActual Amount Agreed: $" + partialAmount.toFixed(2);
+        partialPaymentDetail = "\nActual Amount Due: $" + partialAmount.toFixed(2);
       }
 
       const files = receiptUpload.files;
@@ -390,6 +557,9 @@
         "Office: " + officeValue +
         "\nCounty: " + countyValue +
         "\nEmployee: " + employeeName +
+        "\nDate: " + dateValue +
+        "\nDefendant Name: " + defendantName +
+        "\nPayment Type: " + paymentTypeSelect.value +
         "\nPayment Amount: $" + paymentAmount.toFixed(2) +
         "\nPartial Payment: " + partialPaymentText +
         partialPaymentDetail +
@@ -404,7 +574,7 @@
       window.open(mailtoLink, "_blank");
     }
 
-    // =============== Export to CSV ===============
+    // =============== EXPORT TO CSV ===============
     function exportToCSV() {
       const savedData = localStorage.getItem("arPayment");
       if (!savedData) {
@@ -423,9 +593,12 @@
         "Office",
         "County",
         "Employee Name",
+        "Date",
+        "Defendant Name",
+        "Payment Type",
         "Payment Amount",
         "Partial Payment?",
-        "Actual Amount Agreed",
+        "Actual Amount Due",
         "Receipt File Names",
         "Timestamp"
       ];
@@ -434,6 +607,9 @@
         arPaymentData.office,
         arPaymentData.county,
         arPaymentData.employeeName,
+        arPaymentData.date || "",
+        arPaymentData.defendantName || "",
+        arPaymentData.paymentType || "",
         arPaymentData.paymentAmount,
         arPaymentData.partialPayment ? "Yes" : "No",
         arPaymentData.partialPaymentAmount ? arPaymentData.partialPaymentAmount : "",
@@ -459,13 +635,25 @@
       URL.revokeObjectURL(url);
     }
 
-    // =============== Save to PHP/MySQL ===============
+    // =============== SAVE TO PHP/MYSQL ===============
     function saveToPHP() {
-      // Gather data just like we do in saveLocally()
       const officeValue = officeSelect.value;
       const countyValue = countySelect.value;
       const employeeName = employeeNameSelect.value;
-      const paymentAmount = parseCurrencyString(paymentAmountInput.value);
+      const dateValue = paymentDateInput.value.trim();
+      const defendantName = defendantNameInput.value.trim();
+
+      let paymentAmount = 0;
+      let isSplit = (paymentTypeSelect.value === "Split Payment");
+      if (isSplit) {
+        const rowDivs = splitRowsContainer.querySelectorAll(".split-row");
+        rowDivs.forEach(div => {
+          const amtInput = div.querySelector("input[type='text']");
+          paymentAmount += parseCurrencyString(amtInput.value);
+        });
+      } else {
+        paymentAmount = parseCurrencyString(paymentAmountInput.value);
+      }
 
       let partialPaymentActive = false;
       let partialPaymentAmount = null;
@@ -480,35 +668,36 @@
         fileNamesArray.push(files[i].name);
       }
 
-      // Build object to send to PHP
       const arPaymentData = {
         office: officeValue,
         county: countyValue,
         employeeName: employeeName,
+        date: dateValue,
+        defendantName: defendantName,
+        paymentType: paymentTypeSelect.value,
         paymentAmount: paymentAmount,
         partialPayment: partialPaymentActive,
         partialPaymentAmount: partialPaymentAmount,
         receiptFileNames: fileNamesArray
       };
 
-      // POST JSON to save_payment.php
       fetch("save_payment.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(arPaymentData)
       })
-        .then(response => response.json())
-        .then(result => {
-          if (result.success) {
-            alert("Payment saved in MySQL! Payment ID: " + result.paymentId);
-          } else {
-            alert("Error saving payment: " + result.error);
-          }
-        })
-        .catch(error => {
-          console.error("Fetch error:", error);
-          alert("Fetch error: " + error.message);
-        });
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          alert("Payment saved in MySQL! Payment ID: " + result.paymentId);
+        } else {
+          alert("Error saving payment: " + result.error);
+        }
+      })
+      .catch(error => {
+        console.error("Fetch error:", error);
+        alert("Fetch error: " + error.message);
+      });
     }
 
     // =============== Button handlers ===============
@@ -525,7 +714,6 @@
       exportToCSV();
     });
 
-    // new button that calls the PHP script
     saveToPhpBtn.addEventListener("click", function() {
       saveToPHP();
     });
