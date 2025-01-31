@@ -99,46 +99,52 @@
       background-color: var(--button-bg-hover);
     }
 
-    /* Toggle Switch Styles */
     .switch {
-      position: relative;
-      display: inline-block;
-      width: 50px;
-      height: 24px;
-    }
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0; 
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: var(--switch-bg-off);
-      transition: .4s;
-      border-radius: 24px;
-    }
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-    input:checked + .slider {
-      background-color: var(--switch-bg-on);
-    }
-    input:checked + .slider:before {
-      transform: translateX(26px);
-    }
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+.switch input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50px;
+  height: 24px;
+  opacity: 0.01;  /* or 0.0 if you like, but 0.01 helps ensure focus is not lost */
+  cursor: pointer;
+}
+.switch input:focus + .slider {
+  outline: 2px dotted #333; 
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #007BFF;
+}
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
 
     /* DARK MODE OVERRIDES */
     body.dark-mode {
@@ -770,133 +776,135 @@
     }
 
     function exportCustomXLS(dateVal, agentName, officeName) {
-      // This function loads "dailyPayments" from localStorage, builds an HTML-based .xls, etc.
-      const stored = localStorage.getItem("dailyPayments");
-      if (!stored) {
-        alert("No daily payments found in localStorage.");
-        return;
-      }
-      const dailyPayments = JSON.parse(stored);
+  // This function loads "dailyPayments" from localStorage, builds an HTML-based .xls.
+  const stored = localStorage.getItem("dailyPayments");
+  if (!stored) {
+    alert("No daily payments found in localStorage.");
+    return;
+  }
+  const dailyPayments = JSON.parse(stored);
 
-      if (dailyPayments.length === 0) {
-        alert("No daily payment records to export.");
-        return;
-      }
+  if (dailyPayments.length === 0) {
+    alert("No daily payment records to export.");
+    return;
+  }
 
-      let totalCash = 0, totalCheck = 0, totalMO = 0, totalCC = 0;
+  let totalCash = 0, totalCheck = 0, totalMO = 0, totalCC = 0;
 
-      const now = new Date();
-      let mm = String(now.getMonth() + 1).padStart(2, "0");
-      let dd = String(now.getDate()).padStart(2, "0");
-      let yyyy = now.getFullYear();
+  const now = new Date();
+  let mm = String(now.getMonth() + 1).padStart(2, "0");
+  let dd = String(now.getDate()).padStart(2, "0");
+  let yyyy = now.getFullYear();
 
-      // If you want to use the first record's county or office name in the file name:
-      const countyForFileName = dailyPayments[0].county || officeName;
-      const fileName = `${mm}-${dd}-${yyyy}-DailyPaymentLog-${agentName}-${countyForFileName}.xls`;
+  // If you want to use the first record's county or office name in the file name:
+  const countyForFileName = dailyPayments[0].county || officeName;
+  const fileName = `${mm}-${dd}-${yyyy}-DailyPaymentLog-${agentName}-${countyForFileName}.xls`;
 
-      // Build the HTML snippet
-      let htmlContent = `
-        <h1 style="text-align:center;">Daily Payment Log</h1>
-        <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; text-align:center;">
-          <!-- Date Row -->
-          <tr>
-            <td><strong>Date:</strong></td>
-            <td>${dateVal}</td>
-          </tr>
-          <!-- Row 1: Agent Name -->
-          <tr>
-            <td><strong>Agent Name:</strong></td>
-            <td>${agentName}</td>
-          </tr>
-          <!-- Row 2: Office Name -->
-          <tr>
-            <td><strong>Office:</strong></td>
-            <td>${officeName}</td>
-          </tr>
-          <!-- Row 3: Empty row -->
-          <tr><td colspan="9" style="height:10px;"></td></tr>
-          <!-- Row 4: Column headers -->
-          <tr style="background-color:#f2f2f2;">
-            <th>Date</th>
-            <th>Defendant Name</th>
-            <th>County</th>
-            <th>Cash</th>
-            <th>Check</th>
-            <th>Money Order</th>
-            <th>Credit Card</th>
-            <th>Partial Pmt (Y/N)</th>
-            <th>Actual Amt Due</th>
-          </tr>
-      `;
+  // Build the HTML snippet
+  let htmlContent = `
+    <h1 style="text-align:center;">Daily Payment Log</h1>
+    <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; text-align:center;">
+      <!-- Date Row -->
+      <tr>
+        <td><strong>Date:</strong></td>
+        <td>${dateVal}</td>
+      </tr>
+      <!-- Row 1: Agent Name -->
+      <tr>
+        <td><strong>Agent Name:</strong></td>
+        <td>${agentName}</td>
+      </tr>
+      <!-- Row 2: Office Name -->
+      <tr>
+        <td><strong>Office:</strong></td>
+        <td>${officeName}</td>
+      </tr>
+      <!-- Row 3: Empty row -->
+      <tr><td colspan="9" style="height:10px;"></td></tr>
+      <!-- Row 4: Column headers -->
+      <tr style="background-color:#f2f2f2;">
+        <th>Date</th>
+        <th>Defendant Name</th>
+        <th>County</th>
+        <th>Cash</th>
+        <th>Check</th>
+        <th>Money Order</th>
+        <th>Credit Card</th>
+        <th>Partial Pmt (Y/N)</th>
+        <th>Actual Amt Due</th>
+      </tr>
+  `;
 
-      // Add payment rows
-      dailyPayments.forEach(payment => {
-        totalCash += payment.cash || 0;
-        totalCheck += payment.check || 0;
-        totalMO += payment.moneyOrder || 0;
-        totalCC += payment.creditCard || 0;
+  // Add payment rows
+  dailyPayments.forEach(payment => {
+    totalCash += payment.cash || 0;
+    totalCheck += payment.check || 0;
+    totalMO += payment.moneyOrder || 0;
+    totalCC += payment.creditCard || 0;
 
-        const partialYesNo = payment.partialPayment ? "Y" : "N";
-        const actualDue = payment.actualAmountDue ? payment.actualAmountDue : 0;
+    const partialYesNo = payment.partialPayment ? "Y" : "N";
 
-        htmlContent += `
-          <tr>
-            <td>${payment.date || ""}</td>
-            <td>${payment.defendantName || ""}</td>
-            <td>${payment.county || ""}</td>
-            <td>${(payment.cash || 0).toFixed(2)}</td>
-            <td>${(payment.check || 0).toFixed(2)}</td>
-            <td>${(payment.moneyOrder || 0).toFixed(2)}</td>
-            <td>${(payment.creditCard || 0).toFixed(2)}</td>
-            <td>${partialYesNo}</td>
-            <td>${actualDue}</td>
-          </tr>
-        `;
-      });
+    // KEY: unify the property name with how you store it
+    // If you're storing it as actualAmtDue, use payment.actualAmtDue
+    const actualDue = payment.actualAmtDue || 0;
 
-      // Totals + deposit row
-      htmlContent += `
-          <tr><td colspan="9" style="height:10px;"></td></tr>
-          <tr style="background-color:#eee;">
-            <td></td>
-            <td><strong>Totals</strong></td>
-            <td></td>
-            <td><strong>${totalCash.toFixed(2)}</strong></td>
-            <td><strong>${totalCheck.toFixed(2)}</strong></td>
-            <td><strong>${totalMO.toFixed(2)}</strong></td>
-            <td><strong>${totalCC.toFixed(2)}</strong></td>
-            <td></td>
-            <td></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td><strong>Amount to be deposited</strong></td>
-            <td></td>
-            <td><strong>${totalCash.toFixed(2)}</strong></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-          </tr>
-        </table>
-      `;
+    htmlContent += `
+      <tr>
+        <td>${payment.date || ""}</td>
+        <td>${payment.defendantName || ""}</td>
+        <td>${payment.county || ""}</td>
+        <td>${(payment.cash || 0).toFixed(2)}</td>
+        <td>${(payment.check || 0).toFixed(2)}</td>
+        <td>${(payment.moneyOrder || 0).toFixed(2)}</td>
+        <td>${(payment.creditCard || 0).toFixed(2)}</td>
+        <td>${partialYesNo}</td>
+        <td>${actualDue.toFixed(2)}</td>
+      </tr>
+    `;
+  });
 
-      // Create a Blob for the .xls
-      const blob = new Blob([htmlContent], {
-        type: "application/vnd.ms-excel;charset=utf-8"
-      });
+  htmlContent += `
+      <tr><td colspan="9" style="height:10px;"></td></tr>
+      <tr style="background-color:#eee;">
+        <td></td>
+        <td><strong>Totals</strong></td>
+        <td></td>
+        <td><strong>${totalCash.toFixed(2)}</strong></td>
+        <td><strong>${totalCheck.toFixed(2)}</strong></td>
+        <td><strong>${totalMO.toFixed(2)}</strong></td>
+        <td><strong>${totalCC.toFixed(2)}</strong></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td><strong>Amount to be deposited</strong></td>
+        <td></td>
+        <td><strong>${totalCash.toFixed(2)}</strong></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+    </table>
+  `;
 
-      // Trigger download
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }
+  // Create a Blob for the .xls
+  const blob = new Blob([htmlContent], {
+    type: "application/vnd.ms-excel;charset=utf-8"
+  });
+
+  // Trigger download
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
     // =============== .XLSX (SheetJS) Export ===============
     function exportDailyLogXlsx(dateValue, agentName, officeName, dailyPayments) {
