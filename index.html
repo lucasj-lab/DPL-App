@@ -473,23 +473,21 @@ input:checked + .slider:before {
   const dateValue = paymentDateInput.value.trim();
   const defendantName = defendantNameInput.value.trim();
 
-  // Track each payment type separately
+  // We'll accumulate amounts in these fields.
   let totalCash = 0;
   let totalCheck = 0;
   let totalMoneyOrder = 0;
   let totalCreditCard = 0;
 
-  // Is the user doing a "Split Payment" (multiple partial lines) or a single type?
+  // Check if it's a split or single type
   const isSplit = (paymentTypeSelect.value === "Split Payment");
 
   if (isSplit) {
     // If multiple partial lines, each line has a dropdown (Cash/Check/MoneyOrder/CreditCard) and an amount
     const rowDivs = splitRowsContainer.querySelectorAll(".split-row");
     rowDivs.forEach(div => {
-      // For each line, figure out which type it is:
       const paymentTypeDropdown = div.querySelector("select");
-      const selectedType = paymentTypeDropdown.value; // "Cash", "Check", etc.
-
+      const selectedType = paymentTypeDropdown.value; 
       const amtInput = div.querySelector("input[type='text']");
       const amtVal = parseCurrencyString(amtInput.value);
 
@@ -508,45 +506,46 @@ input:checked + .slider:before {
           break;
       }
     });
-
   } else {
-    // Single payment (one line). 
-    // We only have one typed amount, plus a single Payment Type selection
-    const singleAmt = parseCurrencyString(paymentAmountInput.value);
-    const selectedType = paymentTypeSelect.value; // e.g. "Cash", "Check", etc.
-
+    // Single payment line
+    const amtVal = parseCurrencyString(paymentAmountInput.value);
+    const selectedType = paymentTypeSelect.value; 
     switch (selectedType) {
       case "Cash":
-        totalCash = singleAmt;
+        totalCash = amtVal;
         break;
       case "Check":
-        totalCheck = singleAmt;
+        totalCheck = amtVal;
         break;
       case "Money Order":
-        totalMoneyOrder = singleAmt;
+        totalMoneyOrder = amtVal;
         break;
       case "Credit Card":
-        totalCreditCard = singleAmt;
+        totalCreditCard = amtVal;
         break;
     }
   }
 
-  // Handle partial payment toggle
+  // Is partial payment toggled?
   let partialPaymentActive = false;
-  let partialPaymentAmount = null;
+  let partialPaymentAmount = 0;
   if (partialPaymentSwitch.checked) {
     partialPaymentActive = true;
     partialPaymentAmount = parseCurrencyString(partialPaymentInput.value);
   }
 
-  // Gather file names for multiple file uploads
-  const files = receiptUpload.files;
-  let fileNamesArray = [];
-  for (let i = 0; i < files.length; i++) {
-    fileNamesArray.push(files[i].name);
+  // NEW LOGIC: actualAmtDue is partialPaymentAmount if partial is on,
+  // otherwise the sum of all amounts (cash + check + moneyOrder + creditCard).
+  let actualAmtDue = 0;
+  if (partialPaymentActive) {
+    // partial toggled => actual due is the partial payment amount
+    actualAmtDue = partialPaymentAmount;
+  } else {
+    // partial NOT toggled => actual due is the full total
+    actualAmtDue = totalCash + totalCheck + totalMoneyOrder + totalCreditCard;
   }
 
-  // Build a single record that matches the fields your XLS/XLSX logic expects:
+  // Build the record to store
   const singlePaymentData = {
     office: officeValue,
     county: countyValue,
@@ -554,39 +553,46 @@ input:checked + .slider:before {
     date: dateValue,
     defendantName: defendantName,
 
-    // Payment type info
-    // The total for each method is stored separately
+    // Payment method breakdown
     cash: totalCash,
     check: totalCheck,
     moneyOrder: totalMoneyOrder,
     creditCard: totalCreditCard,
 
-    // We can still store 'paymentType' if you like, but it's not strictly needed
-    // if your XLSX logic only references the 4 fields above:
-    paymentType: isSplit ? "Split Payment" : paymentTypeSelect.value,
-
-    // Partial payment data
+    // Partial Payment
     partialPayment: partialPaymentActive,
-    actualAmtDue: partialPaymentAmount,  // rename if you want to keep `partialPaymentAmount`, etc.
+    // We can keep partialPaymentAmount for debugging or reference
+    partialPaymentAmount: partialPaymentAmount, 
+    // The actual due field your .xls references:
+    actualAmtDue: actualAmtDue,
 
-    // File names
-    receiptFileNames: fileNamesArray,
-
-    // A timestamp for reference
+    // For filenames or reference
+    receiptFileNames: gatherFileNames(receiptUpload), 
     timestamp: new Date().toISOString()
   };
 
-  // 1) Load existing 'dailyPayments' array from localStorage
+  // Load or create dailyPayments array from localStorage
   let dailyPayments = JSON.parse(localStorage.getItem("dailyPayments")) || [];
 
-  // 2) Add this new record
+  // Push new record
   dailyPayments.push(singlePaymentData);
 
-  // 3) Save it back to localStorage
+  // Save back
   localStorage.setItem("dailyPayments", JSON.stringify(dailyPayments));
 
   alert("Payment data added to the dailyPayments array in localStorage.");
 }
+
+// Helper function (not strictly needed, but for clarity)
+function gatherFileNames(fileInput) {
+  const files = fileInput.files;
+  let fileNamesArray = [];
+  for (let i = 0; i < files.length; i++) {
+    fileNamesArray.push(files[i].name);
+  }
+  return fileNamesArray;
+}
+
 
 
     // =============== SEND EMAIL ===============
