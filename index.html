@@ -188,7 +188,6 @@
             <label for="darkModeSwitch" style="margin-bottom: 0;">Dark Mode?</label>
           </div>
 
-          
           <!-- Employee Name -->
           <div class="form-row">
             <label for="employeeNameSelect">Employee Name:</label>
@@ -201,7 +200,7 @@
             </select>
           </div>
 
-          <!-- 1) Office Dropdown at the TOP (default Cobb) -->
+          <!-- 1) Office Dropdown (default Cobb) -->
           <div class="form-row">
             <label for="officeSelect">Office:</label>
             <select id="officeSelect">
@@ -212,11 +211,9 @@
             </select>
           </div>
 
-       
-
-          <!-- ADDITIONS: Date (left), Defendant Name (right) -->
+          <!-- ADDITIONS: Date (MM/DD/YYYY), Defendant Name -->
           <div class="form-row" style="flex-direction: row; gap: 20px;">
-            <!-- Date (MM/DD/YYYY) -->
+            <!-- Date -->
             <div style="flex: 1;">
               <label for="paymentDateInput">Date:</label><br>
               <input id="paymentDateInput" type="text" placeholder="MM/DD/YYYY">
@@ -228,19 +225,18 @@
             </div>
           </div>
 
-             <!-- County Selection (also defaults to Cobb) -->
-             <div class="form-row">
-              <label for="countySelect">Select County:</label>
-              <select id="countySelect">
-                <option value="Cobb" selected>Cobb</option>
-                <option value="Fulton">Fulton</option>
-                <option value="Gwinnett">Gwinnett</option>
-                <option value="DeKalb">DeKalb</option>
-              </select>
-            </div>
-  
+          <!-- County Selection (default Cobb) -->
+          <div class="form-row">
+            <label for="countySelect">Select County:</label>
+            <select id="countySelect">
+              <option value="Cobb" selected>Cobb</option>
+              <option value="Fulton">Fulton</option>
+              <option value="Gwinnett">Gwinnett</option>
+              <option value="DeKalb">DeKalb</option>
+            </select>
+          </div>
 
-          <!-- Payment Type Dropdown -->
+          <!-- Payment Type -->
           <div class="form-row">
             <label for="paymentTypeSelect">Payment Type:</label>
             <select id="paymentTypeSelect">
@@ -252,13 +248,13 @@
             </select>
           </div>
 
-          <!-- Single Payment Row (shown unless "Split Payment" is chosen) -->
+          <!-- Single Payment Row (not shown if "Split Payment") -->
           <div class="form-row" id="singlePaymentRow">
             <label for="paymentAmountInput">Payment Amount ($):</label>
             <input id="paymentAmountInput" type="text" placeholder="$0.00">
           </div>
 
-          <!-- Split Payment Container (only if "Split Payment") -->
+          <!-- Split Payment Container -->
           <div class="split-payment-container" id="splitPaymentContainer">
             <p style="margin-top:0; font-weight:bold;">Split Payment Details:</p>
             <div id="splitRows"></div>
@@ -274,7 +270,7 @@
             <label for="partialPaymentSwitch" style="margin-bottom: 0;">Partial Payment?</label>
           </div>
 
-          <!-- Actual Amount Agreed -->
+          <!-- Actual Amount Due -->
           <div class="form-row" id="partialPaymentRow" style="display: none;">
             <label id="partialPaymentLabel" for="partialPaymentInput">Actual Amount Due:</label>
             <input id="partialPaymentInput" type="text" list="partialPaymentDataList" placeholder="$0.00">
@@ -295,11 +291,20 @@
             <button id="saveAndSendBtn" type="button">Save and Send</button>
             <button id="exportBtn" type="button">Export to Excel (CSV)</button>
             <button id="saveToPhpBtn" type="button">Save to PHP/MySQL</button>
+
+            <!-- NEW: Export to XLS (HTML approach) -->
+            <button id="exportXlsBtn" type="button">Export to XLS</button>
+
+            <!-- NEW: Export to XLSX with SheetJS -->
+            <button id="exportXlsxBtn" type="button">Export to XLSX</button>
           </div>
         </div> <!-- .card-content -->
       </div> <!-- .card -->
     </div> <!-- .container -->
   </div> <!-- .container-wrapper -->
+
+  <!-- 1) (Optional) Load SheetJS from a CDN for XLSX export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
   <script>
     // =============== References ===============
@@ -331,13 +336,16 @@
     const exportBtn = document.getElementById("exportBtn");
     const saveToPhpBtn = document.getElementById("saveToPhpBtn");
 
+    // NEW Buttons for XLS + XLSX
+    const exportXlsBtn = document.getElementById("exportXlsBtn");
+    const exportXlsxBtn = document.getElementById("exportXlsxBtn");
+
     // =============== AUTO-SET DATE IN MM/DD/YYYY ===============
     window.addEventListener("load", function() {
       const today = new Date();
       const yyyy = today.getFullYear();
       let mm = (today.getMonth() + 1).toString().padStart(2, "0");
       let dd = today.getDate().toString().padStart(2, "0");
-      // e.g. "02/05/2025"
       paymentDateInput.value = `${mm}/${dd}/${yyyy}`;
     });
 
@@ -358,7 +366,7 @@
         inputElement.value = "";
         return;
       }
-      // Remove any non-digit or decimal chars (like $, commas)
+      // Remove any non-digit or decimal chars
       rawValue = rawValue.replace(/[^\d.]/g, "");
       const parsedValue = parseFloat(rawValue);
       if (!isNaN(parsedValue)) {
@@ -388,7 +396,7 @@
       }
     });
 
-    // Parse currency from "$1,234.56" to float 1234.56
+    // Parse "$1,234.56" => float 1234.56
     function parseCurrencyString(currencyString) {
       if (!currencyString) {
         return 0;
@@ -403,20 +411,16 @@
       if (paymentTypeSelect.value === "Split Payment") {
         singlePaymentRow.style.display = "none";
         splitPaymentContainer.style.display = "block";
-
-        // If no rows yet, add 2 default rows
         if (splitRowsContainer.children.length === 0) {
           addSplitRow();
           addSplitRow();
         }
       } else {
-        // Normal single payment
         singlePaymentRow.style.display = "block";
         splitPaymentContainer.style.display = "none";
       }
     });
 
-    // Payment types for each split row (excluding "Split Payment" itself)
     const paymentTypes = ["Cash", "Check", "Money Order", "Credit Card"];
 
     addSplitRowBtn.addEventListener("click", function() {
@@ -427,7 +431,6 @@
       const rowDiv = document.createElement("div");
       rowDiv.classList.add("split-row");
 
-      // Payment Type select
       const selectEl = document.createElement("select");
       paymentTypes.forEach(pt => {
         const opt = document.createElement("option");
@@ -436,7 +439,6 @@
         selectEl.appendChild(opt);
       });
 
-      // Amount input
       const amountInput = document.createElement("input");
       amountInput.type = "text";
       amountInput.placeholder = "$0.00";
@@ -444,7 +446,6 @@
         formatToUSD(amountInput);
       });
 
-      // Remove button
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
       removeBtn.textContent = "Remove";
@@ -471,14 +472,12 @@
       let isSplit = (paymentTypeSelect.value === "Split Payment");
 
       if (isSplit) {
-        // Sum the amounts from each split row
         const rowDivs = splitRowsContainer.querySelectorAll(".split-row");
         rowDivs.forEach(div => {
           const amtInput = div.querySelector("input[type='text']");
           paymentAmount += parseCurrencyString(amtInput.value);
         });
       } else {
-        // Single payment
         paymentAmount = parseCurrencyString(paymentAmountInput.value);
       }
 
@@ -489,7 +488,6 @@
         partialPaymentAmount = parseCurrencyString(partialPaymentInput.value);
       }
 
-      // Multiple file names
       const files = receiptUpload.files;
       let fileNamesArray = [];
       for (let i = 0; i < files.length; i++) {
@@ -511,7 +509,7 @@
       };
 
       localStorage.setItem("arPayment", JSON.stringify(arPaymentData));
-      alert("Payment data (including office, date, defendant name, and split or single payment) saved locally.");
+      alert("Payment data saved locally.");
     }
 
     // =============== SEND EMAIL ===============
@@ -540,8 +538,8 @@
       let partialPaymentDetail = "";
       if (partialPaymentSwitch.checked) {
         partialPaymentText = "Yes";
-        const partialAmount = parseCurrencyString(partialPaymentInput.value);
-        partialPaymentDetail = "\nActual Amount Due: $" + partialAmount.toFixed(2);
+        const partialAmt = parseCurrencyString(partialPaymentInput.value);
+        partialPaymentDetail = "\nActual Amount Due: $" + partialAmt.toFixed(2);
       }
 
       const files = receiptUpload.files;
@@ -700,7 +698,138 @@
       });
     }
 
-    // =============== Button handlers ===============
+    // =============== EXPORT to XLS (HTML approach) ===============
+    function exportToXLS(paymentDataArray) {
+      // The snippet you provided:
+      let tableHeader = `
+        <thead>
+          <tr>
+            <th>Office</th>
+            <th>County</th>
+            <th>Agent</th>
+            <th>Date</th>
+            <th>Defendant</th>
+            <th>Cash</th>
+            <th>Check</th>
+            <th>Money Order</th>
+            <th>Credit Card</th>
+          </tr>
+        </thead>
+      `;
+
+      let tableBody = `<tbody>`;
+      paymentDataArray.forEach(item => {
+        // item.cash, item.check, item.moneyOrder, item.creditCard might
+        // come from your logic. We'll just stick your single 'paymentAmount'
+        // into "Cash" for demo. Adjust if needed for real multi-column approach.
+        tableBody += `
+          <tr>
+            <td>${item.office || ""}</td>
+            <td>${item.county || ""}</td>
+            <td>${item.agent || ""}</td>
+            <td>${item.date || ""}</td>
+            <td>${item.defendantName || ""}</td>
+            <td>${item.cash?.toFixed(2) || 0}</td>
+            <td>${item.check?.toFixed(2) || 0}</td>
+            <td>${item.moneyOrder?.toFixed(2) || 0}</td>
+            <td>${item.creditCard?.toFixed(2) || 0}</td>
+          </tr>
+        `;
+      });
+      tableBody += `</tbody>`;
+
+      let fullTableHTML = `
+        <table>
+          ${tableHeader}
+          ${tableBody}
+        </table>
+      `;
+
+      const blob = new Blob([fullTableHTML], {
+        type: "application/vnd.ms-excel;charset=utf-8"
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "DailyPaymentLog.xls";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    // =============== EXPORT to XLSX (SheetJS) ===============
+    function exportToXLSX() {
+      const savedData = localStorage.getItem("arPayment");
+      if (!savedData) {
+        alert("No payment data found in localStorage to export.");
+        return;
+      }
+      const arPaymentData = JSON.parse(savedData);
+
+      // We'll create a 2D array with headers, then data
+      const wsData = [];
+      wsData.push(["Office","County","Agent","Date","Defendant","Payment Amount","Partial?","Receipt Files","Timestamp"]);
+
+      // For a single record, we just have one row
+      let joinedFileNames = "";
+      if (Array.isArray(arPaymentData.receiptFileNames)) {
+        joinedFileNames = arPaymentData.receiptFileNames.join(";");
+      }
+
+      const dataRow = [
+        arPaymentData.office,
+        arPaymentData.county,
+        arPaymentData.employeeName,
+        arPaymentData.date,
+        arPaymentData.defendantName,
+        arPaymentData.paymentAmount,
+        arPaymentData.partialPayment ? "Yes" : "No",
+        joinedFileNames,
+        arPaymentData.timestamp
+      ];
+      wsData.push(dataRow);
+
+      // Build sheet
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "PaymentLog");
+      XLSX.writeFile(wb, "DailyPaymentLog.xlsx");
+    }
+
+    // =============== Additional Button handlers ===============
+    exportXlsBtn.addEventListener("click", function() {
+      // We'll just do a single-record approach:
+      const savedData = localStorage.getItem("arPayment");
+      if (!savedData) {
+        alert("No payment data found in localStorage to export.");
+        return;
+      }
+      const data = JSON.parse(savedData);
+
+      // For the snippet's table, we have columns: "cash, check, moneyOrder, creditCard"
+      // We'll put all "paymentAmount" into "cash" for demonstration.
+      const recordForXls = {
+        office: data.office,
+        county: data.county,
+        agent: data.employeeName,
+        date: data.date,
+        defendantName: data.defendantName,
+        cash: data.paymentAmount,   // everything in "cash"
+        check: 0,
+        moneyOrder: 0,
+        creditCard: 0
+      };
+
+      exportToXLS([recordForXls]); // Pass an array of 1
+    });
+
+    exportXlsxBtn.addEventListener("click", function() {
+      exportToXLSX();
+    });
+
+    // Keep existing button logic
     saveBtn.addEventListener("click", function() {
       saveLocally();
     });
