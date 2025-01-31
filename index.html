@@ -460,57 +460,128 @@
       splitRowsContainer.appendChild(rowDiv);
     }
 
-    // =============== SAVE LOCALLY ===============
     function saveLocally() {
-      const officeValue = officeSelect.value;
-      const countyValue = countySelect.value;
-      const employeeName = employeeNameSelect.value;
-      const dateValue = paymentDateInput.value.trim();
-      const defendantName = defendantNameInput.value.trim();
+  const officeValue = officeSelect.value;
+  const countyValue = countySelect.value;
+  const employeeName = employeeNameSelect.value;
+  const dateValue = paymentDateInput.value.trim();
+  const defendantName = defendantNameInput.value.trim();
 
-      let paymentAmount = 0;
-      let isSplit = (paymentTypeSelect.value === "Split Payment");
+  // Track each payment type separately
+  let totalCash = 0;
+  let totalCheck = 0;
+  let totalMoneyOrder = 0;
+  let totalCreditCard = 0;
 
-      if (isSplit) {
-        const rowDivs = splitRowsContainer.querySelectorAll(".split-row");
-        rowDivs.forEach(div => {
-          const amtInput = div.querySelector("input[type='text']");
-          paymentAmount += parseCurrencyString(amtInput.value);
-        });
-      } else {
-        paymentAmount = parseCurrencyString(paymentAmountInput.value);
+  // Is the user doing a "Split Payment" (multiple partial lines) or a single type?
+  const isSplit = (paymentTypeSelect.value === "Split Payment");
+
+  if (isSplit) {
+    // If multiple partial lines, each line has a dropdown (Cash/Check/MoneyOrder/CreditCard) and an amount
+    const rowDivs = splitRowsContainer.querySelectorAll(".split-row");
+    rowDivs.forEach(div => {
+      // For each line, figure out which type it is:
+      const paymentTypeDropdown = div.querySelector("select");
+      const selectedType = paymentTypeDropdown.value; // "Cash", "Check", etc.
+
+      const amtInput = div.querySelector("input[type='text']");
+      const amtVal = parseCurrencyString(amtInput.value);
+
+      switch (selectedType) {
+        case "Cash":
+          totalCash += amtVal;
+          break;
+        case "Check":
+          totalCheck += amtVal;
+          break;
+        case "Money Order":
+          totalMoneyOrder += amtVal;
+          break;
+        case "Credit Card":
+          totalCreditCard += amtVal;
+          break;
       }
+    });
 
-      let partialPaymentActive = false;
-      let partialPaymentAmount = null;
-      if (partialPaymentSwitch.checked) {
-        partialPaymentActive = true;
-        partialPaymentAmount = parseCurrencyString(partialPaymentInput.value);
-      }
+  } else {
+    // Single payment (one line). 
+    // We only have one typed amount, plus a single Payment Type selection
+    const singleAmt = parseCurrencyString(paymentAmountInput.value);
+    const selectedType = paymentTypeSelect.value; // e.g. "Cash", "Check", etc.
 
-      const files = receiptUpload.files;
-      let fileNamesArray = [];
-      for (let i = 0; i < files.length; i++) {
-        fileNamesArray.push(files[i].name);
-      }
-
-      const arPaymentData = {
-        office: officeValue,
-        county: countyValue,
-        employeeName: employeeName,
-        date: dateValue,
-        defendantName: defendantName,
-        paymentType: paymentTypeSelect.value,
-        paymentAmount: paymentAmount,
-        partialPayment: partialPaymentActive,
-        partialPaymentAmount: partialPaymentAmount,
-        receiptFileNames: fileNamesArray,
-        timestamp: new Date().toISOString()
-      };
-
-      localStorage.setItem("arPayment", JSON.stringify(arPaymentData));
-      alert("Payment data saved locally.");
+    switch (selectedType) {
+      case "Cash":
+        totalCash = singleAmt;
+        break;
+      case "Check":
+        totalCheck = singleAmt;
+        break;
+      case "Money Order":
+        totalMoneyOrder = singleAmt;
+        break;
+      case "Credit Card":
+        totalCreditCard = singleAmt;
+        break;
     }
+  }
+
+  // Handle partial payment toggle
+  let partialPaymentActive = false;
+  let partialPaymentAmount = null;
+  if (partialPaymentSwitch.checked) {
+    partialPaymentActive = true;
+    partialPaymentAmount = parseCurrencyString(partialPaymentInput.value);
+  }
+
+  // Gather file names for multiple file uploads
+  const files = receiptUpload.files;
+  let fileNamesArray = [];
+  for (let i = 0; i < files.length; i++) {
+    fileNamesArray.push(files[i].name);
+  }
+
+  // Build a single record that matches the fields your XLS/XLSX logic expects:
+  const singlePaymentData = {
+    office: officeValue,
+    county: countyValue,
+    employeeName: employeeName,
+    date: dateValue,
+    defendantName: defendantName,
+
+    // Payment type info
+    // The total for each method is stored separately
+    cash: totalCash,
+    check: totalCheck,
+    moneyOrder: totalMoneyOrder,
+    creditCard: totalCreditCard,
+
+    // We can still store 'paymentType' if you like, but it's not strictly needed
+    // if your XLSX logic only references the 4 fields above:
+    paymentType: isSplit ? "Split Payment" : paymentTypeSelect.value,
+
+    // Partial payment data
+    partialPayment: partialPaymentActive,
+    actualAmtDue: partialPaymentAmount,  // rename if you want to keep `partialPaymentAmount`, etc.
+
+    // File names
+    receiptFileNames: fileNamesArray,
+
+    // A timestamp for reference
+    timestamp: new Date().toISOString()
+  };
+
+  // 1) Load existing 'dailyPayments' array from localStorage
+  let dailyPayments = JSON.parse(localStorage.getItem("dailyPayments")) || [];
+
+  // 2) Add this new record
+  dailyPayments.push(singlePaymentData);
+
+  // 3) Save it back to localStorage
+  localStorage.setItem("dailyPayments", JSON.stringify(dailyPayments));
+
+  alert("Payment data added to the dailyPayments array in localStorage.");
+}
+
 
     // =============== SEND EMAIL ===============
     function sendEmail() {
@@ -523,7 +594,7 @@
       const defendantName = defendantNameInput.value;
 
       let paymentAmount = 0;
-      let isSplit = (paymentTypeSelect.value === "Split Payment");
+      const isSplit = (paymentTypeSelect.value === "Split Payment");
       if (isSplit) {
         const rowDivs = splitRowsContainer.querySelectorAll(".split-row");
         rowDivs.forEach(div => {
@@ -565,7 +636,7 @@
         "\n\n(This data also saved locally in the browser.)";
 
       const mailtoLink =
-        "mailto:jamieflint@bondjamesbondinc.com,ar@bondjamesbondinc.com"
+        "mailto:Lucas.L@bondjamesbondinc.com"
         + "?subject=" + encodeURIComponent(subject)
         + "&body=" + encodeURIComponent(body);
 
@@ -642,7 +713,7 @@
       const defendantName = defendantNameInput.value.trim();
 
       let paymentAmount = 0;
-      let isSplit = (paymentTypeSelect.value === "Split Payment");
+      const isSplit = (paymentTypeSelect.value === "Split Payment");
       if (isSplit) {
         const rowDivs = splitRowsContainer.querySelectorAll(".split-row");
         rowDivs.forEach(div => {
@@ -698,159 +769,308 @@
       });
     }
 
-    // =============== EXPORT to XLS (HTML approach) ===============
-    function exportToXLS(paymentDataArray) {
-      // The snippet you provided:
-      let tableHeader = `
-        <thead>
+    // =============== Export Custom XLS ===============
+    function exportCustomXLS(agentName, officeName) {
+      // ... existing function from your snippet ...
+      // This function loads "dailyPayments" from localStorage, builds an HTML-based .xls, etc.
+
+      const stored = localStorage.getItem("dailyPayments");
+      if (!stored) {
+        alert("No daily payments found in localStorage.");
+        return;
+      }
+      const dailyPayments = JSON.parse(stored); // array of payment objects
+
+      if (dailyPayments.length === 0) {
+        alert("No daily payment records to export.");
+        return;
+      }
+
+      let totalCash = 0, totalCheck = 0, totalMO = 0, totalCC = 0;
+
+      const now = new Date();
+      let mm = String(now.getMonth() + 1).padStart(2, "0");
+      let dd = String(now.getDate()).padStart(2, "0");
+      let yyyy = now.getFullYear();
+      const countyForFileName = dailyPayments[0].county || officeName;
+      const fileName = `${mm}-${dd}-${yyyy}-DailyPaymentLog-${agentName}-${countyForFileName}.xls`;
+
+      let htmlContent = `
+        <h1 style="text-align:center;">Daily Payment Log</h1>
+        <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;">
+          <!-- Row 1: Agent Name -->
           <tr>
-            <th>Office</th>
-            <th>County</th>
-            <th>Agent</th>
+            <td><strong>Agent Name:</strong></td>
+            <td>${agentName}</td>
+          </tr>
+          <!-- Row 2: Office Name -->
+          <tr>
+            <td><strong>Office:</strong></td>
+            <td>${officeName}</td>
+          </tr>
+          <!-- Row 3: Empty row -->
+          <tr><td colspan="9" style="height:10px;"></td></tr>
+          <!-- Row 4: Column headers -->
+          <tr style="background-color:#f2f2f2;">
             <th>Date</th>
-            <th>Defendant</th>
+            <th>Defendant Name</th>
+            <th>County</th>
             <th>Cash</th>
             <th>Check</th>
             <th>Money Order</th>
             <th>Credit Card</th>
+            <th>Partial Pmt (Y/N)</th>
+            <th>Actual Amt Due</th>
           </tr>
-        </thead>
       `;
 
-      let tableBody = `<tbody>`;
-      paymentDataArray.forEach(item => {
-        // item.cash, item.check, item.moneyOrder, item.creditCard might
-        // come from your logic. We'll just stick your single 'paymentAmount'
-        // into "Cash" for demo. Adjust if needed for real multi-column approach.
-        tableBody += `
+      dailyPayments.forEach(payment => {
+        totalCash += payment.cash || 0;
+        totalCheck += payment.check || 0;
+        totalMO += payment.moneyOrder || 0;
+        totalCC += payment.creditCard || 0;
+
+        const partialYesNo = payment.partialPayment ? "Y" : "N";
+        const actualDue = payment.actualAmountDue ? payment.actualAmountDue : 0;
+
+        htmlContent += `
           <tr>
-            <td>${item.office || ""}</td>
-            <td>${item.county || ""}</td>
-            <td>${item.agent || ""}</td>
-            <td>${item.date || ""}</td>
-            <td>${item.defendantName || ""}</td>
-            <td>${item.cash?.toFixed(2) || 0}</td>
-            <td>${item.check?.toFixed(2) || 0}</td>
-            <td>${item.moneyOrder?.toFixed(2) || 0}</td>
-            <td>${item.creditCard?.toFixed(2) || 0}</td>
+            <td>${payment.date || ""}</td>
+            <td>${payment.defendantName || ""}</td>
+            <td>${payment.county || ""}</td>
+            <td>${(payment.cash || 0).toFixed(2)}</td>
+            <td>${(payment.check || 0).toFixed(2)}</td>
+            <td>${(payment.moneyOrder || 0).toFixed(2)}</td>
+            <td>${(payment.creditCard || 0).toFixed(2)}</td>
+            <td>${partialYesNo}</td>
+            <td>${actualDue}</td>
           </tr>
         `;
       });
-      tableBody += `</tbody>`;
 
-      let fullTableHTML = `
-        <table>
-          ${tableHeader}
-          ${tableBody}
+      htmlContent += `
+          <tr><td colspan="9" style="height:10px;"></td></tr>
+          <tr style="background-color:#eee;">
+            <td></td>
+            <td><strong>Totals</strong></td>
+            <td></td>
+            <td><strong>${totalCash.toFixed(2)}</strong></td>
+            <td><strong>${totalCheck.toFixed(2)}</strong></td>
+            <td><strong>${totalMO.toFixed(2)}</strong></td>
+            <td><strong>${totalCC.toFixed(2)}</strong></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td><strong>Amount to be deposited</strong></td>
+            <td></td>
+            <td><strong>${totalCash.toFixed(2)}</strong></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
         </table>
       `;
 
-      const blob = new Blob([fullTableHTML], {
+      const blob = new Blob([htmlContent], {
         type: "application/vnd.ms-excel;charset=utf-8"
       });
 
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "DailyPaymentLog.xls";
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     }
+    function exportDailyLogXlsx(agentName, officeName, dailyPayments) {
+  // We'll build an array of arrays (AoA) that structure your rows:
+  // Row 1: "Daily Payment Log" (big merged cell across columns A..I)
+  // Row 2: [Agent Name, agentName]
+  // Row 3: [Office, officeName]
+  // Row 4: blank
+  // Row 5: headers
+  // Row 6..N: data
+  // Next row: blank
+  // Next row: Totals
+  // Next row: deposit
 
-    // =============== EXPORT to XLSX (SheetJS) ===============
-    function exportToXLSX() {
-      const savedData = localStorage.getItem("arPayment");
-      if (!savedData) {
-        alert("No payment data found in localStorage to export.");
-        return;
-      }
-      const arPaymentData = JSON.parse(savedData);
+  const rows = [];
 
-      // We'll create a 2D array with headers, then data
-      const wsData = [];
-      wsData.push(["Office","County","Agent","Date","Defendant","Payment Amount","Partial?","Receipt Files","Timestamp"]);
+  // Row 1: single cell "Daily Payment Log", we will merge columns A..I
+  rows.push(["Daily Payment Log"]); // we'll merge this across multiple columns
 
-      // For a single record, we just have one row
-      let joinedFileNames = "";
-      if (Array.isArray(arPaymentData.receiptFileNames)) {
-        joinedFileNames = arPaymentData.receiptFileNames.join(";");
-      }
+  // Row 2: agent name
+  rows.push(["Agent Name:", agentName]);
 
-      const dataRow = [
-        arPaymentData.office,
-        arPaymentData.county,
-        arPaymentData.employeeName,
-        arPaymentData.date,
-        arPaymentData.defendantName,
-        arPaymentData.paymentAmount,
-        arPaymentData.partialPayment ? "Yes" : "No",
-        joinedFileNames,
-        arPaymentData.timestamp
-      ];
-      wsData.push(dataRow);
+  // Row 3: office
+  rows.push(["Office:", officeName]);
 
-      // Build sheet
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "PaymentLog");
-      XLSX.writeFile(wb, "DailyPaymentLog.xlsx");
+  // Row 4: blank
+  rows.push([]);
+
+  // Row 5: column headers (like your HTML approach)
+  rows.push([
+    "Date",
+    "Defendant Name",
+    "County",
+    "Cash",
+    "Check",
+    "Money Order",
+    "Credit Card",
+    "Partial Pmt (Y/N)",
+    "Actual Amt Due"
+  ]);
+
+  // Keep track of totals
+  let totalCash = 0, totalCheck = 0, totalMO = 0, totalCC = 0;
+
+  // Rows for each payment
+  dailyPayments.forEach(payment => {
+    const dateVal = payment.date || "";
+    const defName = payment.defendantName || "";
+    const county = payment.county || "";
+    const cash = payment.cash || 0;
+    const check = payment.check || 0;
+    const moneyOrder = payment.moneyOrder || 0;
+    const creditCard = payment.creditCard || 0;
+    const partialYesNo = payment.partialPayment ? "Y" : "N";
+    const actualDue = payment.actualAmtDue || 0;
+
+    rows.push([
+      dateVal,
+      defName,
+      county,
+      cash,
+      check,
+      moneyOrder,
+      creditCard,
+      partialYesNo,
+      actualDue
+    ]);
+
+    // accumulate totals
+    totalCash += cash;
+    totalCheck += check;
+    totalMO += moneyOrder;
+    totalCC += creditCard;
+  });
+
+  // Blank row after data
+  rows.push([]);
+
+  // Totals row
+  rows.push([
+    "", 
+    "Totals",
+    "", 
+    totalCash, 
+    totalCheck, 
+    totalMO, 
+    totalCC, 
+    "", 
+    ""
+  ]);
+
+  // Deposit row
+  rows.push([
+    "", 
+    "Amount to be deposited",
+    "",
+    totalCash,
+    "",
+    "",
+    "",
+    "",
+    ""
+  ]);
+
+  // 2) Convert to a Sheet
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // 3) ADD MERGES to replicate the "merged top row" look
+  // We'll merge row 1 (which is index 0) from column A (c=0) to column I (c=8)
+  // That means s = start, e = end
+  ws["!merges"] = [
+    { s: {r:0, c:0}, e: {r:0, c:8} }  // merges row 0's columns 0..8
+  ];
+
+  // (Optional) You can add more merges or do specialized style if you have the Pro version of SheetJS
+
+  // 4) Create a new workbook and append the sheet
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Daily Payment Log");
+
+  // 5) Build a file name
+  // e.g., "01-31-2025-DailyPaymentLog-Lucas-Cobb.xlsx"
+  const today = new Date();
+  let mm = String(today.getMonth() + 1).padStart(2, "0");
+  let dd = String(today.getDate()).padStart(2, "0");
+  let yyyy = today.getFullYear();
+  const fileName = `${mm}-${dd}-${yyyy}-DailyPaymentLog-${agentName}-${officeName}.xlsx`;
+
+  // 6) Write the file
+  XLSX.writeFile(wb, fileName);
+}
+
+
+  // =============== Button handlers ===============
+  exportXlsBtn.addEventListener("click", function() {
+    // If you want to do an HTML-based .xls approach, call your existing function here
+    const agent = employeeNameSelect.value;
+    const officeName = officeSelect.value;
+    exportCustomXLS(agent, officeName);
+  });
+
+  // ADD THIS LISTENER: Export to XLSX
+  exportXlsxBtn.addEventListener("click", function() {
+    // 1) Load dailyPayments from localStorage
+    const stored = localStorage.getItem("dailyPayments");
+    if (!stored) {
+      alert("No daily payments found in localStorage to export as XLSX.");
+      return;
+    }
+    const dailyPayments = JSON.parse(stored);
+    if (!Array.isArray(dailyPayments) || dailyPayments.length === 0) {
+      alert("No records in dailyPayments to export.");
+      return;
     }
 
-    // =============== Additional Button handlers ===============
-    exportXlsBtn.addEventListener("click", function() {
-      // We'll just do a single-record approach:
-      const savedData = localStorage.getItem("arPayment");
-      if (!savedData) {
-        alert("No payment data found in localStorage to export.");
-        return;
-      }
-      const data = JSON.parse(savedData);
+    // 2) Gather date, employee, office
+    const dateValue = paymentDateInput.value.trim() || "NoDate";
+    const employeeName = employeeNameSelect.value || "UnknownEmployee";
+    const officeValueName = officeSelect.value || "UnknownOffice";
 
-      // For the snippet's table, we have columns: "cash, check, moneyOrder, creditCard"
-      // We'll put all "paymentAmount" into "cash" for demonstration.
-      const recordForXls = {
-        office: data.office,
-        county: data.county,
-        agent: data.employeeName,
-        date: data.date,
-        defendantName: data.defendantName,
-        cash: data.paymentAmount,   // everything in "cash"
-        check: 0,
-        moneyOrder: 0,
-        creditCard: 0
-      };
+    // 3) Call the XLSX export
+    exportDailyLogXlsx(dateValue, employeeName, officeValueName, dailyPayments);
+  });
 
-      exportToXLS([recordForXls]); // Pass an array of 1
-    });
+  saveBtn.addEventListener("click", function() {
+    saveLocally();
+  });
 
-    exportXlsxBtn.addEventListener("click", function() {
-      exportToXLSX();
-    });
+  saveAndSendBtn.addEventListener("click", function() {
+    saveLocally();
+    sendEmail();
+  });
 
-    // Keep existing button logic
-    saveBtn.addEventListener("click", function() {
-      saveLocally();
-    });
+  exportBtn.addEventListener("click", function() {
+    exportToCSV();
+  });
 
-    saveAndSendBtn.addEventListener("click", function() {
-      saveLocally();
-      sendEmail();
-    });
+  saveToPhpBtn.addEventListener("click", function() {
+    saveToPHP();
+  });
 
-    exportBtn.addEventListener("click", function() {
-      exportToCSV();
-    });
-
-    saveToPhpBtn.addEventListener("click", function() {
-      saveToPHP();
-    });
-
-    // Dark Mode
-    darkModeSwitch.addEventListener("change", function() {
-      document.body.classList.toggle("dark-mode", darkModeSwitch.checked);
-    });
-  </script>
+  // Dark Mode
+  darkModeSwitch.addEventListener("change", function() {
+    document.body.classList.toggle("dark-mode", darkModeSwitch.checked);
+  });
+</script>
 </body>
 </html>
