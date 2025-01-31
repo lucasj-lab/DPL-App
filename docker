@@ -1,0 +1,9 @@
+FROM nginx:alpine
+
+# Copy all files to the default nginx html directory
+COPY . /usr/share/nginx/html
+
+# Expose port 80 (not strictly required for Render, but good practice)
+EXPOSE 80
+
+# The default command in nginx:alpine starts nginx, so no extra CMD needed
