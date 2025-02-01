@@ -122,54 +122,49 @@ button:hover {
   background-color: var(--button-bg-hover);
 }
 
-/* Minimal, sleek toggle switch */
-
+/* SWITCHES */
 .switch {
   position: relative;
   display: inline-block;
-  width: 36px;  /* track width */
-  height: 20px; /* track height */
+  width: 50px;
+  height: 24px;
 }
-
 .switch input {
   position: absolute;
-  width: 0;
-  height: 0;
-  opacity: 0;   /* hide the input box */
-  margin: 0;
-  padding: 0;
+  top: 0;
+  left: 0;
+  width: 50px;
+  height: 24px;
+  opacity: 0.01; /* minimal so it can still receive focus */
   cursor: pointer;
 }
-
+.switch input:focus + .slider {
+  outline: 2px dotted #333;
+}
 .slider {
   position: absolute;
+  cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
   background-color: var(--switch-bg-off);
-  border-radius: 20px;  /* fully rounded corners */
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  transition: .4s;
+  border-radius: 24px;
 }
-
 .slider:before {
-  content: "";
   position: absolute;
-  left: 2px;
-  top: 2px;
-  width: 16px;  
-  height: 16px;
-  background-color: #fff;  /* knob color */
-  border-radius: 50%;       /* circular knob */
-  transition: transform 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
 }
-
-/* When the switch is checked */
 input:checked + .slider {
-  background-color: var(--switch-bg-on); /* or your preferred ON color */
-  box-shadow: 0 0 4px rgba(0,0,0,0.2);
+  background-color: var(--switch-bg-on);
 }
-
 input:checked + .slider:before {
-  transform: translateX(16px); /* slide the knob to the right */
+  transform: translateX(26px);
 }
 
 /* 2) SPLIT PAYMENT CONTAINER */
@@ -189,7 +184,7 @@ input:checked + .slider:before {
 
 /* 3) "Configure" Toggle for Office/Account/Employee fields */
 .configure-section {
-  display: none; /* hide by default */
+  display:flex; /* hide by default */
   margin-top: 10px;
 }
 /* If #configureToggle is checked, show the configure section */
@@ -423,6 +418,23 @@ input:checked + .slider:before {
         <div class="card-content">
           <h2>A/R Payment</h2>
 
+          <!-- Dark Mode Toggle (checked by default) -->
+          <div class="form-row toggle-row">
+            <label class="switch">
+              <input type="checkbox" id="darkModeSwitch" checked>
+              <span class="slider"></span>
+            </label>
+            <label for="darkModeSwitch" style="margin-bottom: 0;">Dark Mode?</label>
+          </div>
+
+          <!-- Configure Toggle -->
+          <div class="form-row toggle-row">
+            <label class="switch">
+              <input type="checkbox" id="configureToggle">
+              <span class="slider"></span>
+            </label>
+            <label for="configureToggle" style="margin-bottom: 0;">Configure?</label>
+          </div>
 
           <!-- Hidden section: Office, Account, Employee Name
                Must be a direct sibling of #configureToggle for the CSS ~ rule to work -->
@@ -1210,5 +1222,3 @@ input:checked + .slider:before {
   </script>
 </body>
 </html>
-
-
