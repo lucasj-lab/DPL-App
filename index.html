@@ -122,49 +122,54 @@ button:hover {
   background-color: var(--button-bg-hover);
 }
 
-/* SWITCHES */
+/* Minimal, sleek toggle switch */
+
 .switch {
   position: relative;
   display: inline-block;
-  width: 50px;
-  height: 24px;
+  width: 36px;  /* track width */
+  height: 20px; /* track height */
 }
+
 .switch input {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 50px;
-  height: 24px;
-  opacity: 0.01; /* minimal so it can still receive focus */
+  width: 0;
+  height: 0;
+  opacity: 0;   /* hide the input box */
+  margin: 0;
+  padding: 0;
   cursor: pointer;
 }
-.switch input:focus + .slider {
-  outline: 2px dotted #333;
-}
+
 .slider {
   position: absolute;
-  cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
   background-color: var(--switch-bg-off);
-  transition: .4s;
-  border-radius: 24px;
+  border-radius: 20px;  /* fully rounded corners */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
+
 .slider:before {
-  position: absolute;
   content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 16px;  
+  height: 16px;
+  background-color: #fff;  /* knob color */
+  border-radius: 50%;       /* circular knob */
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
+
+/* When the switch is checked */
 input:checked + .slider {
-  background-color: var(--switch-bg-on);
+  background-color: var(--switch-bg-on); /* or your preferred ON color */
+  box-shadow: 0 0 4px rgba(0,0,0,0.2);
 }
+
 input:checked + .slider:before {
-  transform: translateX(26px);
+  transform: translateX(16px); /* slide the knob to the right */
 }
 
 /* 2) SPLIT PAYMENT CONTAINER */
@@ -250,9 +255,8 @@ input:checked + .slider:before {
     .card-content h2 {
       margin-top: 0;
     }
-
-    /* ============ FORM ROWS ============ */
-    .form-row {
+ /* ============ FORM ROWS ============ */
+ .form-row {
       margin-bottom: 15px;
       display: flex;
       flex-direction: column;
@@ -266,14 +270,13 @@ input:checked + .slider:before {
     .form-row input[list],
     .form-row select,
     .form-row input[type="file"] {
-      width: 200px; /* consistent width for form-row inputs */
+      /* width: 200px; */ /* consistent width for form-row inputs */
       padding: 8px;
       font-size: 14px;
       background-color: var(--input-bg);
       color: var(--input-text);
       border: 1px solid #ccc;
     }
-
     /* ============ TOGGLE ROWS ============ */
     .toggle-row {
       display: flex;
@@ -401,7 +404,7 @@ input:checked + .slider:before {
       .form-row select,
       .split-row select,
       .split-row input[type="text"] {
-        width: 100%;
+        width: 50%;
         max-width: none;
       }
       .container {
@@ -494,19 +497,19 @@ input:checked + .slider:before {
           <!-- Date Row -->
           <div class="form-row" style="flex-direction: row; gap: 20px;">
             <div style="flex: 1;">
-              <label for="paymentDateInput">Date:</label><br>
+              <label for="paymentDateInput"></label><br>
               <input id="paymentDateInput" type="text" placeholder="MM/DD/YYYY">
             </div>
           </div>
 
           <!-- Split Payment Container -->
-          <div class="split-payment-container" id="splitPaymentContainer">
-            <p style="margin-top:0; font-weight:bold;">Payment Details:</p>
+          <div class="split-payment-container" id="splitPaymentContainer" placeholder="Payment Details">
+            <p style="margin-top:0; font-weight:bold;"></p>
 
             <!-- Defendant Name row -->
             <div class="split-row">
               <div>
-                <label for="defendantNameInput">Defendant Name:</label><br>
+                <label for="defendantNameInput"></label><br>
                 <input id="defendantNameInput" type="text" placeholder="Defendant Name" role="textbox">
               </div>
             </div>
@@ -514,8 +517,8 @@ input:checked + .slider:before {
             <!-- First Payment Row (Payment Type & Amount) -->
             <div class="split-row" id="firstPaymentRow">
               <div>
-                <label for="firstPaymentTypeSelect">Payment Type:</label><br>
-                <select id="firstPaymentTypeSelect" role="combobox">
+                <label for="firstPaymentTypeSelect"></label><br>
+                <select id="firstPaymentTypeSelect" role="combobox" placeholder="Select Payment Type">
                   <option value="Cash">Cash</option>
                   <option value="Check">Check</option>
                   <option value="Money Order">Money Order</option>
@@ -523,7 +526,7 @@ input:checked + .slider:before {
                 </select>
               </div>
               <div>
-                <label for="firstPaymentAmountInput">Payment Amount ($):</label><br>
+                <label for="firstPaymentAmountInput"></label><br>
                 <input id="firstPaymentAmountInput" type="text" placeholder="$0.00" role="textbox">
               </div>
             </div>
@@ -545,8 +548,8 @@ input:checked + .slider:before {
           </div>
 
           <div class="form-row" id="partialPaymentRow" style="display: none;">
-            <label id="partialPaymentLabel" for="partialPaymentInput">Actual Amount Due:</label>
-            <input id="partialPaymentInput" type="text" list="partialPaymentDataList" placeholder="$0.00">
+            <label id="partialPaymentLabel" for="partialPaymentInput"></label>
+            <input id="partialPaymentInput" type="text" list="partialPaymentDataList" placeholder="Actual Amount Due:$">
             <datalist id="partialPaymentDataList">
               <!-- Populated via JS in increments of 25 -->
             </datalist>
