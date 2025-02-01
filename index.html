@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>A/R Payment with Office Dropdown</title>
+  <!-- For responsive design on mobile -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-:root {
+    :root {
   /* Light Mode Variables */
   --primary-bg: #f2f2f2;
   --primary-text: #000000;
@@ -190,16 +192,235 @@ input:checked + .slider:before {
   display: block;
 }
 
+    :root {
+      /* Light Mode Variables */
+      --primary-bg: #f2f2f2;
+      --primary-text: #000000;
+      --card-bg: #ffffff;
+      --input-bg: #ffffff;
+      --input-text: #000000;
+      --switch-bg-off: #ccc;
+      --switch-bg-on: #007BFF;
+      --button-bg: #007BFF;
+      --button-bg-hover: #0056b3;
+    }
+
+    body.dark-mode {
+      /* Dark Mode Overrides */
+      --primary-bg: #121212;
+      --primary-text: #ffffff;
+      --card-bg: #1e1e1e;
+      --input-bg: #2c2c2c;
+      --input-text: #ffffff;
+      --switch-bg-off: #888;
+      --switch-bg-on: #66aaff;
+      --button-bg: #3b82f6;
+      --button-bg-hover: #2563eb;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--primary-bg);
+      color: var(--primary-text);
+    }
+
+    .container-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-top: 40px;
+      padding: 0 10px; /* Some padding for mobile edges */
+    }
+    .container {
+      width: 90%;
+      max-width: 600px;
+    }
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .card-content {
+      padding: 20px;
+    }
+    .card-content h2 {
+      margin-top: 0;
+    }
+
+    /* ============ FORM ROWS ============ */
+    .form-row {
+      margin-bottom: 15px;
+      display: flex;
+      flex-direction: column;
+    }
+    .form-row label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    /* All text inputs, selects, file inputs, etc. */
+    .form-row input[type="text"],
+    .form-row input[list],
+    .form-row select,
+    .form-row input[type="file"] {
+      width: 200px; /* consistent width for form-row inputs */
+      padding: 8px;
+      font-size: 14px;
+      background-color: var(--input-bg);
+      color: var(--input-text);
+      border: 1px solid #ccc;
+    }
+
+    /* ============ TOGGLE ROWS ============ */
+    .toggle-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* ============ BUTTONS ============ */
+    .button-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    button {
+      cursor: pointer;
+      padding: 10px 20px;
+      background-color: var(--button-bg);
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    button:hover {
+      background-color: var(--button-bg-hover);
+    }
+
+    /* ============ SWITCHES ============ */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .switch input {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 50px;
+      height: 24px;
+      opacity: 0.01; /* minimal so it can still receive focus */
+      cursor: pointer;
+    }
+    .switch input:focus + .slider {
+      outline: 2px dotted #333;
+    }
+    .slider {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--switch-bg-off);
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--switch-bg-on);
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    /* ============ SPLIT PAYMENT ============ */
+    .split-payment-container {
+      border: 1px solid #ccc;
+      background-color: var(--input-bg);
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    .split-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: flex-start; /* Ensures top alignment */
+    }
+    .split-row select,
+    .split-row input[type="text"] {
+      width: 200px; /* consistent with form-row */
+    }
+
+    /* ============ CONFIGURE SECTION TOGGLE ============ */
+    .configure-section {
+      display: none; /* hide by default */
+      margin-top: 10px;
+    }
+    /* #configureToggle:checked ~ .configure-section => direct sibling reveal */
+    #configureToggle:checked ~ .configure-section {
+      display: block;
+    }
+
+    /* ============ MESSAGE BOX ============ */
+    #messageBox {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      display: none; /* hidden by default; we show via JS */
+    }
+    .msg-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .msg-error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    /* ============ RESPONSIVE MEDIA QUERY ============ */
+    @media (max-width: 600px) {
+      .split-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .form-row input[type="text"],
+      .form-row select,
+      .split-row select,
+      .split-row input[type="text"] {
+        width: 100%;
+        max-width: none;
+      }
+      .container {
+        width: 100%;
+        margin: 0;
+        padding: 0 10px;
+      }
+    }
   </style>
 </head>
-<body class="dark-mode">  <!-- Force dark mode at load -->
 
+<body class="dark-mode">
   <div class="container-wrapper">
     <div class="container">
       <div class="card">
         <div class="card-content">
+          <h2>A/R Payment</h2>
 
-          <!-- 1) Dark Mode Switch (checked by default) -->
+          <!-- Dark Mode Toggle (checked by default) -->
           <div class="form-row toggle-row">
             <label class="switch">
               <input type="checkbox" id="darkModeSwitch" checked>
@@ -208,7 +429,7 @@ input:checked + .slider:before {
             <label for="darkModeSwitch" style="margin-bottom: 0;">Dark Mode?</label>
           </div>
 
-          <!-- 2) "Configure" Toggle -->
+          <!-- Configure Toggle -->
           <div class="form-row toggle-row">
             <label class="switch">
               <input type="checkbox" id="configureToggle">
@@ -217,83 +438,84 @@ input:checked + .slider:before {
             <label for="configureToggle" style="margin-bottom: 0;">Configure?</label>
           </div>
 
-   <!-- Office Dropdown -->
-   <div class="configure-section">
-   <div class="form-row">
-    <label for="officeSelect">Office:</label>
-    <select id="officeSelect">
-      <option value="Cobb" selected>Cobb</option>
-      <option value="12732">Barrow</option>
-      <option value="12733">Bartow</option>
-      <option value="12734">Carroll</option>
-      <option value="12735">Cherokee</option>
-      <option value="12736">Clarke</option>
-      <option value="12738">Floyd</option>
-      <option value="12739">Gordon</option>
-      <option value="12740">Gwinnett</option>
-      <option value="12741">Haralson</option>
-      <option value="12742">Paulding</option>
-      <option value="14385">Pickens</option>
-      <option value="12743">Polk</option>
-    </select>
-  </div>
+          <!-- Hidden section: Office, Account, Employee Name
+               Must be a direct sibling of #configureToggle for the CSS ~ rule to work -->
+          <div class="configure-section">
+            <div class="form-row">
+              <label for="officeSelect">Office:</label>
+              <select id="officeSelect">
+                <option value="Cobb" selected>Cobb</option>
+                <option value="12732">Barrow</option>
+                <option value="12733">Bartow</option>
+                <option value="12734">Carroll</option>
+                <option value="12735">Cherokee</option>
+                <option value="12736">Clarke</option>
+                <option value="12738">Floyd</option>
+                <option value="12739">Gordon</option>
+                <option value="12740">Gwinnett</option>
+                <option value="12741">Haralson</option>
+                <option value="12742">Paulding</option>
+                <option value="14385">Pickens</option>
+                <option value="12743">Polk</option>
+              </select>
+            </div>
 
-  <!-- County Selection (Account) -->
+            <div class="form-row">
+              <label for="countySelect">Account:</label>
+              <select id="countySelect">
+                <option value="Cobb" selected>Cobb</option>
+                <option value="12732">Barrow</option>
+                <option value="12733">Bartow</option>
+                <option value="12734">Carroll</option>
+                <option value="12735">Cherokee</option>
+                <option value="12736">Clarke</option>
+                <option value="12738">Floyd</option>
+                <option value="12739">Gordon</option>
+                <option value="12740">Gwinnett</option>
+                <option value="12741">Haralson</option>
+                <option value="12742">Paulding</option>
+                <option value="14385">Pickens</option>
+                <option value="12743">Polk</option>
+              </select>
+            </div>
 
-  <div class="form-row">
-    <label for="countySelect">Account:</label>
-    <select id="countySelect">
-      <option value="Cobb" selected>Cobb</option>
-      <option value="12732">Barrow</option>
-      <option value="12733">Bartow</option>
-      <option value="12734">Carroll</option>
-      <option value="12735">Cherokee</option>
-      <option value="12736">Clarke</option>
-      <option value="12738">Floyd</option>
-      <option value="12739">Gordon</option>
-      <option value="12740">Gwinnett</option>
-      <option value="12741">Haralson</option>
-      <option value="12742">Paulding</option>
-      <option value="14385">Pickens</option>
-      <option value="12743">Polk</option>
-    </select>
-  </div>
+            <div class="form-row">
+              <label for="employeeNameInput">Employee Name:</label>
+              <input id="employeeNameInput" list="employeeNameSelect" placeholder="Choose Employee..." value="Lucas">
+              <datalist id="employeeNameSelect">
+                <option value="Lucas"></option>
+                <option value="Adam P."></option>
+                <option value="Amber M."></option>
+                <option value="Vicki W."></option>
+              </datalist>
+            </div>
+          </div>
 
-  <!-- Employee Name -->
-  <div class="form-row">
-    <label for="employeeNameInput">Employee Name:</label>
-    <input id="employeeNameInput" list="employeeNameSelect" placeholder="Choose Employee..." value="Lucas">
-    <datalist id="employeeNameSelect">
-      <option value="Lucas"></option>
-      <option value="Adam P."></option>
-      <option value="Amber M."></option>
-      <!-- Add more employees as needed -->
-      <option value="Vicki W."></option>
-    </datalist>
-  </div>
-
-          <!-- Date Input Only (Defendant Name now in first row below) -->
+          <!-- Date Row -->
           <div class="form-row" style="flex-direction: row; gap: 20px;">
             <div style="flex: 1;">
               <label for="paymentDateInput">Date:</label><br>
               <input id="paymentDateInput" type="text" placeholder="MM/DD/YYYY">
             </div>
           </div>
-        </div>
+
+          <!-- Split Payment Container -->
           <div class="split-payment-container" id="splitPaymentContainer">
             <p style="margin-top:0; font-weight:bold;">Payment Details:</p>
-          
-            <!-- Defendant Name on its own, above the row of Payment Type & Amount -->
-            <div class="split-row" id="firstPaymentRow">
-              <label for="defendantNameInput"></label><br>
-              <input id="defendantNameInput" type="text" placeholder="Defendant Name" role="textbox">
+
+            <!-- Defendant Name row -->
+            <div class="split-row">
+              <div>
+                <label for="defendantNameInput">Defendant Name:</label><br>
+                <input id="defendantNameInput" type="text" placeholder="Defendant Name" role="textbox">
+              </div>
             </div>
-          
-            <!-- FIRST/DEFAULT PAYMENT ROW: Payment Type & Amount side by side -->
+
+            <!-- First Payment Row (Payment Type & Amount) -->
             <div class="split-row" id="firstPaymentRow">
               <div>
-                <label for="firstPaymentTypeSelect"></label><br>
-                <select id="firstPaymentTypeSelect" placeholder="Payment Type" role="combobox">
+                <label for="firstPaymentTypeSelect">Payment Type:</label><br>
+                <select id="firstPaymentTypeSelect" role="combobox">
                   <option value="Cash">Cash</option>
                   <option value="Check">Check</option>
                   <option value="Money Order">Money Order</option>
@@ -301,18 +523,19 @@ input:checked + .slider:before {
                 </select>
               </div>
               <div>
-                <label for="firstPaymentAmountInput"></label><br>
-                <input id="firstPaymentAmountInput" type="text" placeholder="Payment Amount ($)" role="textbox">
+                <label for="firstPaymentAmountInput">Payment Amount ($):</label><br>
+                <input id="firstPaymentAmountInput" type="text" placeholder="$0.00" role="textbox">
               </div>
             </div>
-          
-            <!-- Additional split rows appended here (Payment Type + Amount + Remove) -->
+
+            <!-- Additional split rows appended here -->
             <div id="splitRows"></div>
-          
+
             <!-- Button to add more rows -->
             <button type="button" id="addSplitRowButton" style="margin-top:5px;">+ Add Payment Method</button>
           </div>
-          <!-- Toggle Switch for Partial Payment -->
+
+          <!-- Partial Payment -->
           <div class="form-row toggle-row">
             <label class="switch">
               <input type="checkbox" id="partialPaymentSwitch">
@@ -321,58 +544,63 @@ input:checked + .slider:before {
             <label for="partialPaymentSwitch" style="margin-bottom: 0;">Partial Payment?</label>
           </div>
 
-          <!-- Actual Amount Due (shown only if partial switch is ON) -->
           <div class="form-row" id="partialPaymentRow" style="display: none;">
             <label id="partialPaymentLabel" for="partialPaymentInput">Actual Amount Due:</label>
             <input id="partialPaymentInput" type="text" list="partialPaymentDataList" placeholder="$0.00">
             <datalist id="partialPaymentDataList">
-              <!-- Populated in JS (increments of $25) -->
+              <!-- Populated via JS in increments of 25 -->
             </datalist>
           </div>
 
-       
-          <!-- (Hidden) Receipt Upload to avoid JS error if not present -->
-          <div style="display:none;">
-            <label for="receiptUpload">Receipt Upload:</label>
-            <input type="file" id="receiptUpload" multiple />
+          <!-- Receipt Upload & Upload Button -->
+          <div class="form-row">
+            <label for="receiptUpload">Upload Receipts/Images:</label>
+            <input type="file" id="receiptUpload" multiple accept="image/*,application/pdf" />
+          </div>
+          <div class="form-row">
+            <button id="uploadBtn" type="button">Upload Files</button>
           </div>
 
-          <!-- Buttons -->
+          <!-- Buttons for saving -->
           <div class="button-row">
-            <!-- VISIBLE Button #1: Save -->
             <button id="saveBtn" type="button">Save</button>
-
-            <!-- VISIBLE Button #2: Save and Send -->
             <button id="saveAndSendBtn" type="button">Save and Send</button>
-
-            <!-- HIDDEN Extra Buttons (CSV, XLS, XLSX, Save to PHP) -->
+            <!-- Hidden extras (CSV, XLS, XLSX, Save to PHP) -->
             <button id="exportBtn" type="button" style="display:none;">Export to Excel (CSV)</button>
             <button id="saveToPhpBtn" type="button" style="display:none;">Save to PHP/MySQL</button>
             <button id="exportXlsBtn" type="button" style="display:none;">Export to XLS</button>
             <button id="exportXlsxBtn" type="button" style="display:none;">Export to XLSX</button>
           </div>
+
+          <!-- Client-Side Message Box (replaces alerts) -->
+          <div id="messageBox"></div>
+
         </div> <!-- .card-content -->
       </div> <!-- .card -->
     </div> <!-- .container -->
   </div> <!-- .container-wrapper -->
 
-  <!-- 1) Load SheetJS for XLSX export -->
+  <!-- SheetJS for XLS/XLSX export (if desired) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
   <script>
-    // =============== DARK MODE / BASIC REFERENCES ===============
+    // ========== Basic References ==========
     const darkModeSwitch = document.getElementById("darkModeSwitch");
+    const configureToggle = document.getElementById("configureToggle");
+
     const officeSelect = document.getElementById("officeSelect");
     const countySelect = document.getElementById("countySelect");
     const employeeNameInput = document.getElementById("employeeNameInput");
     const paymentDateInput = document.getElementById("paymentDateInput");
-    const receiptUpload = document.getElementById("receiptUpload");
 
     const partialPaymentSwitch = document.getElementById("partialPaymentSwitch");
     const partialPaymentRow = document.getElementById("partialPaymentRow");
     const partialPaymentInput = document.getElementById("partialPaymentInput");
     const partialPaymentLabel = document.getElementById("partialPaymentLabel");
     const partialPaymentDataList = document.getElementById("partialPaymentDataList");
+
+    const receiptUpload = document.getElementById("receiptUpload");
+    const uploadBtn = document.getElementById("uploadBtn");
 
     // Buttons
     const saveBtn = document.getElementById("saveBtn");
@@ -382,29 +610,51 @@ input:checked + .slider:before {
     const exportXlsBtn = document.getElementById("exportXlsBtn");
     const exportXlsxBtn = document.getElementById("exportXlsxBtn");
 
-    // Split Payment Elements
-    const splitPaymentContainer = document.getElementById("splitPaymentContainer");
+    // Payment Elements
     const firstPaymentTypeSelect = document.getElementById("firstPaymentTypeSelect");
     const firstPaymentAmountInput = document.getElementById("firstPaymentAmountInput");
     const defendantNameInput = document.getElementById("defendantNameInput");
     const addSplitRowButton = document.getElementById("addSplitRowButton");
     const splitRowsContainer = document.getElementById("splitRows");
 
-    // =============== DARK MODE HANDLER ===============
+    // ========== Message Box Utility ==========
+    const messageBox = document.getElementById("messageBox");
+    function showMessage(text, isError=false) {
+      messageBox.style.display = "block";
+      messageBox.textContent = text;
+      // Assign classes for styling
+      messageBox.className = isError ? "msg-error" : "msg-success";
+      // Hide automatically after 4 seconds (optional)
+      setTimeout(() => {
+        messageBox.style.display = "none";
+      }, 4000);
+    }
+
+    // ========== Dark Mode ==========
     darkModeSwitch.addEventListener("change", function() {
-      document.body.classList.toggle("dark-mode", darkModeSwitch.checked);
+      document.body.classList.toggle("dark-mode", this.checked);
     });
 
-    // =============== AUTO-SET DATE IN MM/DD/YYYY ===============
+    // ========== Auto-set Date ==========
     window.addEventListener("load", function() {
       const today = new Date();
       const yyyy = today.getFullYear();
-      let mm = (today.getMonth() + 1).toString().padStart(2, "0");
-      let dd = today.getDate().toString().padStart(2, "0");
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
       paymentDateInput.value = `${mm}/${dd}/${yyyy}`;
     });
 
-    // =============== PARTIAL PAYMENT DROPDOWN (increments of 25) ===============
+    // ========== Partial Payment Toggle ==========
+    partialPaymentSwitch.addEventListener("change", function() {
+      if (this.checked) {
+        partialPaymentRow.style.display = "block";
+        partialPaymentLabel.textContent = "Actual Amount Due:";
+      } else {
+        partialPaymentRow.style.display = "none";
+      }
+    });
+
+    // ========== Populate Partial Payment DataList ==========
     function populatePartialPaymentDataList() {
       for (let i = 25; i <= 10000; i += 25) {
         const optionElement = document.createElement("option");
@@ -414,23 +664,14 @@ input:checked + .slider:before {
     }
     populatePartialPaymentDataList();
 
-    // =============== SHOW/HIDE PARTIAL PAYMENT INPUT ===============
-    partialPaymentSwitch.addEventListener("change", function() {
-      if (partialPaymentSwitch.checked) {
-        partialPaymentRow.style.display = "block";
-        partialPaymentLabel.textContent = "Actual Amount Due:";
-      } else {
-        partialPaymentRow.style.display = "none";
-      }
-    });
-
-    // =============== FORMAT TO USD ===============
+    // ========== Format to USD ==========
     function formatToUSD(inputElement) {
       let rawValue = inputElement.value.trim();
       if (!rawValue) {
         inputElement.value = "";
         return;
       }
+      // remove everything except digits and dots
       rawValue = rawValue.replace(/[^\d.]/g, "");
       const parsedValue = parseFloat(rawValue);
       if (!isNaN(parsedValue)) {
@@ -442,46 +683,35 @@ input:checked + .slider:before {
         inputElement.value = "";
       }
     }
+    firstPaymentAmountInput.addEventListener("blur", () => formatToUSD(firstPaymentAmountInput));
+    partialPaymentInput.addEventListener("blur", () => formatToUSD(partialPaymentInput));
 
-    // Attach blur format to first row’s amount
-    firstPaymentAmountInput.addEventListener("blur", function() {
-      formatToUSD(firstPaymentAmountInput);
-    });
-    partialPaymentInput.addEventListener("blur", function() {
-      formatToUSD(partialPaymentInput);
-    });
-
-    // =============== PARSE CURRENCY STRING => number ===============
-    function parseCurrencyString(currencyString) {
-      if (!currencyString) {
-        return 0;
-      }
-      const numericString = currencyString.replace(/[^\d.]/g, "");
-      const value = parseFloat(numericString);
-      return isNaN(value) ? 0 : value;
+    // ========== Parse Currency ==========
+    function parseCurrencyString(value) {
+      if (!value) return 0;
+      const numericString = value.replace(/[^\d.]/g, "");
+      const parsed = parseFloat(numericString);
+      return isNaN(parsed) ? 0 : parsed;
     }
 
-    // =============== ADDITIONAL SPLIT ROWS ===============
+    // ========== Additional Split Payment Rows ==========
     const paymentTypes = ["Cash", "Check", "Money Order", "Credit Card"];
-
-    addSplitRowButton.addEventListener("click", function() {
-      addSplitRow();
-    });
+    addSplitRowButton.addEventListener("click", addSplitRow);
 
     function addSplitRow() {
       const rowDiv = document.createElement("div");
       rowDiv.classList.add("split-row");
 
-      // Payment type
+      // Payment Type select
       const selectEl = document.createElement("select");
-      paymentTypes.forEach(function(pt) {
+      paymentTypes.forEach(pt => {
         const opt = document.createElement("option");
         opt.value = pt;
         opt.textContent = pt;
         selectEl.appendChild(opt);
       });
 
-      // Amount input
+      // Payment Amount
       const amountInput = document.createElement("input");
       amountInput.type = "text";
       amountInput.placeholder = "Payment Amount ($)";
@@ -489,7 +719,7 @@ input:checked + .slider:before {
         formatToUSD(amountInput);
       });
 
-      // Remove button
+      // Remove Button
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
       removeBtn.textContent = "Remove";
@@ -504,20 +734,30 @@ input:checked + .slider:before {
       splitRowsContainer.appendChild(rowDiv);
     }
 
-    // =============== GATHER FILE NAMES (for multiple images) ===============
+    // ========== Gather File Names ==========
     function gatherFileNames(fileInput) {
-      if (!fileInput) {
-        return [];
-      }
+      if (!fileInput) return [];
       const files = fileInput.files || [];
-      let fileNamesArray = [];
+      const fileNamesArray = [];
       for (let i = 0; i < files.length; i++) {
         fileNamesArray.push(files[i].name);
       }
       return fileNamesArray;
     }
 
-    // =============== SAVE LOCALLY ===============
+    // ========== Upload Button (Placeholder Client-Side) ==========
+    uploadBtn.addEventListener("click", function() {
+      const fileCount = receiptUpload.files.length;
+      if (fileCount === 0) {
+        showMessage("No files selected for upload!", true);
+        return;
+      }
+      const names = gatherFileNames(receiptUpload).join(", ");
+      // In real usage, you'd POST these to an endpoint with FormData
+      showMessage("Files ready to upload: " + names);
+    });
+
+    // ========== Save Locally to localStorage ==========
     function saveLocally() {
       const officeValue = officeSelect.value;
       const countyValue = countySelect.value;
@@ -525,50 +765,31 @@ input:checked + .slider:before {
       const dateValue = paymentDateInput.value.trim();
       const defName = defendantNameInput.value.trim();
 
-      let totalCash = 0;
-      let totalCheck = 0;
-      let totalMoneyOrder = 0;
-      let totalCreditCard = 0;
+      let totalCash = 0, totalCheck = 0, totalMoneyOrder = 0, totalCreditCard = 0;
 
-      // 1) First payment row
+      // First Payment Row
       const firstType = firstPaymentTypeSelect.value;
       const firstAmt = parseCurrencyString(firstPaymentAmountInput.value);
       switch (firstType) {
-        case "Cash":
-          totalCash += firstAmt;
-          break;
-        case "Check":
-          totalCheck += firstAmt;
-          break;
-        case "Money Order":
-          totalMoneyOrder += firstAmt;
-          break;
-        case "Credit Card":
-          totalCreditCard += firstAmt;
-          break;
+        case "Cash": totalCash += firstAmt; break;
+        case "Check": totalCheck += firstAmt; break;
+        case "Money Order": totalMoneyOrder += firstAmt; break;
+        case "Credit Card": totalCreditCard += firstAmt; break;
       }
 
-      // 2) Additional rows
+      // Additional Rows
       const rowDivs = splitRowsContainer.querySelectorAll(".split-row");
-      rowDivs.forEach(function(div) {
+      rowDivs.forEach(div => {
         const paymentTypeDropdown = div.querySelector("select");
         const selectedType = paymentTypeDropdown.value;
         const amtInput = div.querySelector("input[type='text']");
         const amtVal = parseCurrencyString(amtInput.value);
 
         switch (selectedType) {
-          case "Cash":
-            totalCash += amtVal;
-            break;
-          case "Check":
-            totalCheck += amtVal;
-            break;
-          case "Money Order":
-            totalMoneyOrder += amtVal;
-            break;
-          case "Credit Card":
-            totalCreditCard += amtVal;
-            break;
+          case "Cash": totalCash += amtVal; break;
+          case "Check": totalCheck += amtVal; break;
+          case "Money Order": totalMoneyOrder += amtVal; break;
+          case "Credit Card": totalCreditCard += amtVal; break;
         }
       });
 
@@ -579,7 +800,6 @@ input:checked + .slider:before {
         partialPaymentActive = true;
         partialPaymentAmt = parseCurrencyString(partialPaymentInput.value);
       }
-
       const actualAmtDue = partialPaymentActive
         ? partialPaymentAmt
         : (totalCash + totalCheck + totalMoneyOrder + totalCreditCard);
@@ -587,7 +807,6 @@ input:checked + .slider:before {
       // Gather file names
       const fileNames = gatherFileNames(receiptUpload);
 
-      // Build data object
       const paymentData = {
         office: officeValue,
         county: countyValue,
@@ -605,43 +824,39 @@ input:checked + .slider:before {
         timestamp: new Date().toISOString()
       };
 
-      // Save to localStorage
       let dailyPayments = JSON.parse(localStorage.getItem("dailyPayments")) || [];
       dailyPayments.push(paymentData);
       localStorage.setItem("dailyPayments", JSON.stringify(dailyPayments));
     }
 
-    // =============== SEND EMAIL ===============
+    // ========== Send Email (via mailto) ==========
     function sendEmail() {
       const subject = "A/R Payment Information";
-
       const officeValue = officeSelect.value;
       const countyValue = countySelect.value;
       const employeeNameVal = employeeNameInput.value;
       const dateVal = paymentDateInput.value.trim();
       const defName = defendantNameInput.value.trim();
 
-      // Gather all payment rows (first + additional)
       let totalPayment = 0;
       let paymentDetails = "";
 
-      // 1) First row
+      // First row
       const firstType = firstPaymentTypeSelect.value;
       const firstAmt = parseCurrencyString(firstPaymentAmountInput.value);
       totalPayment += firstAmt;
       paymentDetails += `Type: ${firstType}, Amount: $${firstAmt.toFixed(2)}\n`;
 
-      // 2) Additional rows
+      // Additional rows
       const rowDivs = splitRowsContainer.querySelectorAll(".split-row");
-      rowDivs.forEach(function(div) {
+      rowDivs.forEach(div => {
         const sel = div.querySelector("select");
-        const amtInput = div.querySelector("input[type='text']");
-        const amtVal = parseCurrencyString(amtInput.value);
-        totalPayment += amtVal;
-        paymentDetails += `Type: ${sel.value}, Amount: $${amtVal.toFixed(2)}\n`;
+        const amt = parseCurrencyString(div.querySelector("input[type='text']").value);
+        totalPayment += amt;
+        paymentDetails += `Type: ${sel.value}, Amount: $${amt.toFixed(2)}\n`;
       });
 
-      // Partial Payment check
+      // Partial Payment
       let partialPaymentText = "No";
       let partialPaymentDetail = "";
       if (partialPaymentSwitch.checked) {
@@ -681,56 +896,39 @@ input:checked + .slider:before {
       window.open(mailtoLink, "_blank");
     }
 
-    // =============== SAVE TO PHP (MySQL) EXAMPLE ===============
+    // ========== Save to PHP/MySQL (Example) ==========
     function saveToPHP() {
-      const officeValue = officeSelect.value;
-      const countyValue = countySelect.value;
-      const employeeNameVal = employeeNameInput.value;
       const dateVal = paymentDateInput.value.trim();
       const defName = defendantNameInput.value.trim();
 
-      // Sum all rows for one total payment amount
       let totalPayment = 0;
+      totalPayment += parseCurrencyString(firstPaymentAmountInput.value);
 
-      // 1) First row
-      const firstType = firstPaymentTypeSelect.value;
-      const firstAmt = parseCurrencyString(firstPaymentAmountInput.value);
-      totalPayment += firstAmt;
-
-      // 2) Additional rows
       const rowDivs = splitRowsContainer.querySelectorAll(".split-row");
-      rowDivs.forEach(function(div) {
-        const amtInput = div.querySelector("input[type='text']");
-        totalPayment += parseCurrencyString(amtInput.value);
+      rowDivs.forEach(div => {
+        totalPayment += parseCurrencyString(div.querySelector("input[type='text']").value);
       });
 
-      // Partial Payment check
-      let partialPaymentActive = false;
-      let partialPaymentAmt = null;
-      if (partialPaymentSwitch.checked) {
-        partialPaymentActive = true;
-        partialPaymentAmt = parseCurrencyString(partialPaymentInput.value);
-      }
+      let partialPaymentActive = partialPaymentSwitch.checked;
+      let partialPaymentAmt = partialPaymentActive
+        ? parseCurrencyString(partialPaymentInput.value)
+        : null;
 
-      // Gather file names
       const fileNames = gatherFileNames(receiptUpload);
 
-      // Example data object
       const arPaymentData = {
-        office: officeValue,
-        county: countyValue,
-        employeeName: employeeNameVal,
+        office: officeSelect.value,
+        county: countySelect.value,
+        employeeName: employeeNameInput.value,
         date: dateVal,
         defendantName: defName,
-        // If you want the specific "types" for each row, you'd store them in a sub-array.
-        // For brevity, here we just store totalPayment.
         totalPayment: totalPayment,
         partialPayment: partialPaymentActive,
         partialPaymentAmount: partialPaymentAmt,
         receiptFileNames: fileNames
       };
 
-      // Post to your PHP endpoint
+      // POST to some hypothetical server endpoint
       fetch("save_payment.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -739,35 +937,39 @@ input:checked + .slider:before {
       .then(response => response.json())
       .then(result => {
         if (result.success) {
-          console.log("Payment saved in MySQL! Payment ID: " + result.paymentId);
+          showMessage("Payment saved in MySQL. Payment ID: " + result.paymentId);
         } else {
-          alert("Error saving payment: " + result.error);
+          showMessage("Error saving payment: " + result.error, true);
         }
       })
       .catch(error => {
-        console.error("Fetch error:", error);
-        alert("Fetch error: " + error.message);
+        showMessage("Fetch error: " + error.message, true);
       });
     }
 
-    // =============== EXPORT to XLS (HTML-based) ===============
+    // ========== Export to CSV (Placeholder) ==========
+    function exportToCSV() {
+      showMessage("CSV export not fully implemented yet!", true);
+    }
+
+    // ========== Export to XLS (HTML-based) ==========
     function exportCustomXLS(dateVal, agentName, officeName) {
       const stored = localStorage.getItem("dailyPayments");
       if (!stored) {
-        alert("No daily payments found in localStorage.");
+        showMessage("No daily payments found in localStorage.", true);
         return;
       }
       const dailyPayments = JSON.parse(stored);
       if (dailyPayments.length === 0) {
-        alert("No daily payment records to export.");
+        showMessage("No daily payment records to export.", true);
         return;
       }
 
       let totalCash = 0, totalCheck = 0, totalMO = 0, totalCC = 0;
       const now = new Date();
-      let mm = String(now.getMonth() + 1).padStart(2, "0");
-      let dd = String(now.getDate()).padStart(2, "0");
-      let yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const yyyy = now.getFullYear();
 
       const countyForFileName = dailyPayments[0].county || officeName;
       const fileName = `${mm}-${dd}-${yyyy}-DailyPaymentLog-${agentName}-${countyForFileName}.xls`;
@@ -806,7 +1008,6 @@ input:checked + .slider:before {
           </tr>
       `;
 
-      // Rows
       dailyPayments.forEach(payment => {
         totalCash += payment.cash || 0;
         totalCheck += payment.check || 0;
@@ -830,7 +1031,6 @@ input:checked + .slider:before {
         `;
       });
 
-      // Totals
       htmlContent += `
           <tr><td colspan="9" style="height:10px;"></td></tr>
           <tr style="background-color:#eee;">
@@ -858,12 +1058,9 @@ input:checked + .slider:before {
         </table>
       `;
 
-      // Create a Blob for the XLS
       const blob = new Blob([htmlContent], {
         type: "application/vnd.ms-excel;charset=utf-8"
       });
-
-      // Trigger download
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -874,9 +1071,8 @@ input:checked + .slider:before {
       URL.revokeObjectURL(url);
     }
 
-    // =============== EXPORT to XLSX (SheetJS) ===============
+    // ========== Export to XLSX (SheetJS) ==========
     function exportDailyLogXlsx(dateValue, agentName, officeName, dailyPayments) {
-      // Build an array-of-arrays for each row
       const rows = [];
       rows.push(["Daily Payment Log"]); // Title row
       rows.push(["Date:", dateValue]);
@@ -930,23 +1126,19 @@ input:checked + .slider:before {
       rows.push(["", "Totals", "", totalCash, totalCheck, totalMO, totalCC, "", ""]);
       rows.push(["", "Amount to be deposited", "", totalCash, "", "", "", "", ""]);
 
-      // Convert rows => worksheet
       const ws = XLSX.utils.aoa_to_sheet(rows);
-
-      // Optionally add merges or styling
+      // Merges (optional styling)
       ws["!merges"] = [
         { s: {r:0, c:0}, e: {r:0, c:8} } // Merge top title (A1..I1)
       ];
-      // Style the "A1" cell for bold + centered
       if (ws["A1"]) {
         ws["A1"].s = {
           alignment: { horizontal: "center" },
           font: { bold: true, sz: 16 }
         };
       }
-
-      // Basic border & center alignment from row 6 onward
-      const startRowIndex = 5; // zero-based index
+      // Basic borders & center alignment from row 6 onward
+      const startRowIndex = 5; // zero-based
       for (let R = startRowIndex; R < rows.length; R++) {
         for (let C = 0; C < 9; C++) {
           const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
@@ -962,51 +1154,43 @@ input:checked + .slider:before {
         }
       }
 
-      // Create workbook
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Daily Payment Log");
 
-      // Filename
-      const safeDate = (dateValue || "NoDate").replace(/\//g, "-");
+      const safeDate = dateValue.replace(/\//g, "-") || "NoDate";
       const fileName = `${safeDate}-DailyPaymentLog-${agentName}-${officeName}.xlsx`;
-
       XLSX.writeFile(wb, fileName);
     }
 
-    // =============== EXPORT to CSV (Placeholder) ===============
-    function exportToCSV() {
-      alert("CSV export function is not fully implemented. (Placeholder)");
-    }
-
-    // =============== BUTTON HANDLERS ===============
+    // ========== BUTTON HANDLERS ==========
     saveBtn.addEventListener("click", function() {
       saveLocally();
       saveToPHP();
-      // Then export to XLS automatically
+      // Export to XLS automatically
       const dateVal = paymentDateInput.value.trim() || "NoDate";
       const agent = employeeNameInput.value;
       const officeName = officeSelect.value;
       exportCustomXLS(dateVal, agent, officeName);
 
-      alert("Saved locally + MySQL + exported to XLS!");
+      showMessage("Saved locally, stored in MySQL, and exported to XLS successfully.");
     });
 
     saveAndSendBtn.addEventListener("click", function() {
       saveLocally();
       saveToPHP();
-      // Export to XLS if desired
+      // Export to XLS
       const dateVal = paymentDateInput.value.trim() || "NoDate";
       const agent = employeeNameInput.value;
       const officeName = officeSelect.value;
       exportCustomXLS(dateVal, agent, officeName);
 
-      // Then send email
+      // Send email
       sendEmail();
-      alert("Saved locally + MySQL + XLS + Email triggered!");
+      showMessage("Saved, exported to XLS, and email triggered!");
     });
 
     exportBtn.addEventListener("click", function() {
-      exportToCSV();
+      exportToCSV(); // or your own CSV logic
     });
 
     saveToPhpBtn.addEventListener("click", function() {
@@ -1023,18 +1207,19 @@ input:checked + .slider:before {
     exportXlsxBtn.addEventListener("click", function() {
       const stored = localStorage.getItem("dailyPayments");
       if (!stored) {
-        alert("No daily payments in localStorage.");
+        showMessage("No daily payments in localStorage to export!", true);
         return;
       }
       const dailyPayments = JSON.parse(stored);
       if (dailyPayments.length === 0) {
-        alert("No daily payment records to export.");
+        showMessage("No daily payment records to export!", true);
         return;
       }
       const dateVal = paymentDateInput.value.trim() || "NoDate";
       const agent = employeeNameInput.value;
       const officeName = officeSelect.value;
       exportDailyLogXlsx(dateVal, agent, officeName, dailyPayments);
+      showMessage("Exported to XLSX successfully.");
     });
   </script>
 </body>
