@@ -1421,7 +1421,29 @@ async function exportDailyLogXlsxWithImages(dateValue, agentName, officeName, da
   // 4) Finally, write the file
   XLSX.writeFile(wb, `DailyPaymentsWithImages_${Date.now()}.xlsx`);
 }
+function sendEmailWithAttachment(filePath) {
+  const emailData = {
+    recipientEmail: "someone@example.com",
+    subject: "A/R Payment + Attached Receipt",
+    message: "Hi,\nPlease find the attached payment receipt.",
+    filePath: filePath  // e.g., "uploads/my_receipt_123.jpg"
+  };
 
+  fetch("send_email.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(emailData)
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      alert("Email sent with attachment!");
+    } else {
+      alert("Error: " + result.error);
+    }
+  })
+  .catch(err => alert("Fetch error: " + err));
+}
 
   </script>
 </body>

@@ -1,0 +1,238 @@
+
+        <h1 style="text-align:center;">Daily Payment Log</h1>
+        <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; text-align:center;">
+          <!-- Date Row -->
+          <tr>
+            <td><strong>Date:</strong></td>
+            <td>02/01/2025</td>
+          </tr>
+          <!-- Row 1: Agent Name -->
+          <tr>
+            <td><strong>Agent Name:</strong></td>
+            <td>Lucas</td>
+          </tr>
+          <!-- Row 2: Office -->
+          <tr>
+            <td><strong>Office:</strong></td>
+            <td>Cobb</td>
+          </tr>
+          <!-- Empty row -->
+          <tr><td colspan="9" style="height:10px;"></td></tr>
+          <!-- Headers -->
+          <tr style="background-color:#f2f2f2;">
+            <th>Date</th>
+            <th>Defendant Name</th>
+            <th>County</th>
+            <th>Cash</th>
+            <th>Check</th>
+            <th>Money Order</th>
+            <th>Credit Card</th>
+            <th>Partial Pmt (Y/N)</th>
+            <th>Actual Amt Due</th>
+          </tr>
+      
+          <tr>
+            <td>01/31/2025</td>
+            <td>Micky Clark</td>
+            <td>Cobb</td>
+            <td>50.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>N</td>
+            <td>50.00</td>
+          </tr>
+        
+          <tr>
+            <td>01/31/2025</td>
+            <td></td>
+            <td>Cobb</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>N</td>
+            <td>0.00</td>
+          </tr>
+        
+          <tr>
+            <td>01/31/2025</td>
+            <td></td>
+            <td>Cobb</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>N</td>
+            <td>0.00</td>
+          </tr>
+        
+          <tr>
+            <td>01/31/2025</td>
+            <td></td>
+            <td>Cobb</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>N</td>
+            <td>0.00</td>
+          </tr>
+        
+          <tr>
+            <td>01/31/2025</td>
+            <td></td>
+            <td>Cobb</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>N</td>
+            <td>0.00</td>
+          </tr>
+        
+          <tr>
+            <td>01/31/2025</td>
+            <td></td>
+            <td>Cobb</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>N</td>
+            <td>0.00</td>
+          </tr>
+        
+          <tr>
+            <td>01/31/2025</td>
+            <td></td>
+            <td>Cobb</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>N</td>
+            <td>0.00</td>
+          </tr>
+        
+          <tr>
+            <td>01/31/2025</td>
+            <td></td>
+            <td>Cobb</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>N</td>
+            <td>0.00</td>
+          </tr>
+        
+          <tr>
+            <td>01/31/2025</td>
+            <td></td>
+            <td>Cobb</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>N</td>
+            <td>0.00</td>
+          </tr>
+        
+          <tr>
+            <td>01/31/2025</td>
+            <td></td>
+            <td>Cobb</td>
+            <td>10.00</td>
+            <td>0.00</td>
+            <td>50.00</td>
+            <td>0.00</td>
+            <td>Y</td>
+            <td>225.00</td>
+          </tr>
+        
+          <tr>
+            <td>01/31/2025</td>
+            <td></td>
+            <td>Cobb</td>
+            <td>10.00</td>
+            <td>0.00</td>
+            <td>50.00</td>
+            <td>0.00</td>
+            <td>Y</td>
+            <td>225.00</td>
+          </tr>
+        
+          <tr>
+            <td>01/31/2025</td>
+            <td>Dan Dooodle</td>
+            <td>Cobb</td>
+            <td>100.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>Y</td>
+            <td>200.00</td>
+          </tr>
+        
+          <tr>
+            <td>02/01/2025</td>
+            <td>Red Rover</td>
+            <td>Cobb</td>
+            <td>1234.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>N</td>
+            <td>1234.00</td>
+          </tr>
+        
+          <tr>
+            <td>02/01/2025</td>
+            <td></td>
+            <td>Cobb</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>N</td>
+            <td>0.00</td>
+          </tr>
+        
+          <tr>
+            <td>02/01/2025</td>
+            <td></td>
+            <td>Cobb</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td>N</td>
+            <td>0.00</td>
+          </tr>
+        
+          <tr><td colspan="9" style="height:10px;"></td></tr>
+          <tr style="background-color:#eee;">
+            <td></td>
+            <td><strong>Totals</strong></td>
+            <td></td>
+            <td><strong>1404.00</strong></td>
+            <td><strong>0.00</strong></td>
+            <td><strong>100.00</strong></td>
+            <td><strong>0.00</strong></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td><strong>Amount to be deposited</strong></td>
+            <td></td>
+            <td><strong>1404.00</strong></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </table>
+      
