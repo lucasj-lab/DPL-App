@@ -414,8 +414,7 @@ input:checked + .slider:before {
   font-weight: bold;
 }
     /* Hide items we no longer want visible */
-    #darkModeSwitch,
-    #paymentDateInput {
+  #darkModeSwitch, #paymentDateInput {
       display: none; /* completely hide these elements */
     }
     /* ============ RESPONSIVE MEDIA QUERY ============ */
@@ -540,6 +539,8 @@ input:checked + .slider:before {
     </div> <!-- .container -->
   </div> <!-- .container-wrapper -->
           <!-- Dark Mode Toggle (checked by default) -->
+
+          <div class="configure-section">
           <div class="form-row toggle-row">
             <label class="switch">
               <input type="checkbox" id="darkModeSwitch" checked>
@@ -550,13 +551,11 @@ input:checked + .slider:before {
 
 
             
-            
-            <label for="configureToggle" style="margin-bottom: 0;"></label>
-          </div>
+       
 
           <!-- Hidden section: Office, Account, Employee Name
                Must be a direct sibling of #configureToggle for the CSS ~ rule to work -->
-          <div class="configure-section">
+     
             <div class="form-row">
               <label for="officeSelect">Office:</label>
               <select id="officeSelect">
@@ -614,7 +613,12 @@ input:checked + .slider:before {
               <input id="paymentDateInput" type="text" placeholder="MM/DD/YYYY">
             </div>
           </div>
+     
+          <label for="configureToggle" style="margin-bottom: 0;"></label>
+        </div>
 
+
+        
   <!-- SheetJS for XLS/XLSX export (if desired) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
@@ -652,25 +656,13 @@ input:checked + .slider:before {
     const addSplitRowButton = document.getElementById("addSplitRowButton");
     const splitRowsContainer = document.getElementById("splitRows");
 
-    // ========== Message Box Utility ==========
-    function showMessage(text, isError=false) {
-  const messageBox = document.getElementById("messageBox");
-  messageBox.style.display = "block";
-  messageBox.textContent = text;
-  // Assign classes for styling (background color, etc.)
-  messageBox.className = isError ? "msg-error" : "msg-success";
-
-  // Hide automatically after 4 seconds (optional)
-  setTimeout(() => {
-    messageBox.style.display = "none";
-  }, 4000);
-}
-
 
     // ========== Dark Mode ==========
     darkModeSwitch.addEventListener("change", function() {
       document.body.classList.toggle("dark-mode", this.checked);
     });
+
+    
 
     // ========== Auto-set Date ==========
     window.addEventListener("load", function() {
@@ -782,18 +774,6 @@ input:checked + .slider:before {
       return fileNamesArray;
     }
 
-    // ========== Upload Button (Placeholder Client-Side) ==========
-    uploadBtn.addEventListener("click", function() {
-      const fileCount = receiptUpload.files.length;
-      if (fileCount === 0) {
-        showMessage("No files selected for upload!", true);
-        return;
-      }
-      const names = gatherFileNames(receiptUpload).join(", ");
-      // In real usage, you'd POST these to an endpoint with FormData
-      showMessage("Files ready to upload: " + names);
-    });
-
     // ========== Save Locally to localStorage ==========
     function saveLocally() {
       const officeValue = officeSelect.value;
@@ -829,6 +809,27 @@ input:checked + .slider:before {
           case "Credit Card": totalCreditCard += amtVal; break;
         }
       });
+
+      // Grab references
+const selectUploadBtn = document.getElementById("selectUploadBtn");
+const receiptUpload = document.getElementById("receiptUpload");
+
+// Single button triggers hidden file input
+selectUploadBtn.addEventListener("click", function() {
+  receiptUpload.click();
+});
+
+// When user selects files
+receiptUpload.addEventListener("change", function() {
+  const fileCount = receiptUpload.files.length;
+  if (fileCount === 0) {
+    showMessage("No files selected for upload!", true);
+    return;
+  }
+  const names = gatherFileNames(receiptUpload).join(", ");
+  showMessage("Files selected & ready: " + names);
+  // Optionally do actual upload if you want
+});
 
       // Partial Payment
       let partialPaymentActive = false;
