@@ -411,7 +411,11 @@ input:checked + .slider:before {
   text-align: center;
   font-weight: bold;
 }
-
+    /* Hide items we no longer want visible */
+    #darkModeSwitchRow,
+    #dateRow {
+      display: none; /* completely hide these elements */
+    }
     /* ============ RESPONSIVE MEDIA QUERY ============ */
     @media (max-width: 600px) {
       .split-row {
