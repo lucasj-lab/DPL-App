@@ -93,8 +93,8 @@ body {
   border: 1px solid #ccc;
 }
 input#defendantNameInput {
-  height: 30px;
-  width: 80%;
+  height: 12px;
+  width: 410px;
 }
 /* TOGGLE ROWS */
 .toggle-row {
@@ -224,7 +224,7 @@ input:checked + .slider:before {
       padding: 0;
       background-color: var(--primary-bg);
       color: var(--primary-text);
-    }
+}   
 
     .container-wrapper {
       width: 85%;
@@ -243,6 +243,7 @@ input:checked + .slider:before {
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
       margin-bottom: 20px;
       overflow: hidden;
+      padding: 20px;
     }
     .card-content {
       padding: 20px;
@@ -388,6 +389,27 @@ input:checked + .slider:before {
       color: #721c24;
       border: 1px solid #f5c6cb;
     }
+    
+    #messageBox {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  
+  /* styling */
+  background-color: #d4edda; /* or #f8d7da for error */
+  color: #155724; 
+  border: 1px solid #c3e6cb;
+  padding: 10px;
+  border-radius: 4px;
+
+  /* start hidden */
+  display: none; 
+  z-index: 9999; /* ensure on top */
+  width: auto; 
+  text-align: center;
+  font-weight: bold;
+}
 
     /* ============ RESPONSIVE MEDIA QUERY ============ */
     @media (max-width: 600px) {
@@ -549,7 +571,7 @@ input:checked + .slider:before {
 
           <!-- Receipt Upload & Upload Button -->
           <div class="form-row">
-            <label for="receiptUpload">Upload Receipts/Images:</label>
+            <label for="receiptUpload"></label>
             <input type="file" id="receiptUpload" multiple accept="image/*,application/pdf" />
           </div>
           <div class="form-row">
@@ -560,6 +582,18 @@ input:checked + .slider:before {
           <div class="button-row">
             <button id="saveBtn" type="button">Save</button>
             <button id="saveAndSendBtn" type="button">Save and Send</button>
+            <button type="button" onclick="window.location.href='gallery.php'">View Gallery</button>
+    
+              <!-- Option A: Real button -->
+
+            
+              <!-- Option B: <a> styled as button -->
+              <!-- <a href="gallery.php" class="btn-gallery">View Gallery</a> -->
+            </div>
+            
+
+
+
             <!-- Hidden extras (CSV, XLS, XLSX, Save to PHP) -->
             <button id="exportBtn" type="button" style="display:none;">Export to Excel (CSV)</button>
             <button id="saveToPhpBtn" type="button" style="display:none;">Save to PHP/MySQL</button>
@@ -613,17 +647,19 @@ input:checked + .slider:before {
     const splitRowsContainer = document.getElementById("splitRows");
 
     // ========== Message Box Utility ==========
-    const messageBox = document.getElementById("messageBox");
     function showMessage(text, isError=false) {
-      messageBox.style.display = "block";
-      messageBox.textContent = text;
-      // Assign classes for styling
-      messageBox.className = isError ? "msg-error" : "msg-success";
-      // Hide automatically after 4 seconds (optional)
-      setTimeout(() => {
-        messageBox.style.display = "none";
-      }, 4000);
-    }
+  const messageBox = document.getElementById("messageBox");
+  messageBox.style.display = "block";
+  messageBox.textContent = text;
+  // Assign classes for styling (background color, etc.)
+  messageBox.className = isError ? "msg-error" : "msg-success";
+
+  // Hide automatically after 4 seconds (optional)
+  setTimeout(() => {
+    messageBox.style.display = "none";
+  }, 4000);
+}
+
 
     // ========== Dark Mode ==========
     darkModeSwitch.addEventListener("change", function() {
@@ -1216,6 +1252,172 @@ input:checked + .slider:before {
       exportDailyLogXlsx(dateVal, agent, officeName, dailyPayments);
       showMessage("Exported to XLSX successfully.");
     });
+
+    function embedImageAsDataUrl(filePath, callback) {
+  // We'll fetch the file from the server as binary, convert to base64
+  fetch(filePath)
+    .then(response => response.blob())
+    .then(blob => {
+      const reader = new FileReader();
+      reader.onloadend = function() {
+        callback(reader.result); // something like "data:image/jpeg;base64,XYZ..."
+      };
+      reader.readAsDataURL(blob);
+    })
+    .catch(err => callback(null));
+}
+
+function exportCustomXLSWithImages(dateVal, agent, officeName) {
+  let stored = localStorage.getItem("dailyPayments");
+  if (!stored) {
+    alert("No data in localStorage.");
+    return;
+  }
+  let dailyPayments = JSON.parse(stored);
+  if (!dailyPayments.length) {
+    alert("No records to export.");
+    return;
+  }
+
+  // We'll build a big HTML string
+  let htmlContent = `<h1>Daily Payment Log</h1><table border="1"><tr><th>Date</th><th>Defendant</th><th>Image</th></tr>`;
+
+  // We'll process each payment, one by one, converting the image to base64
+  let i = 0;
+  function processNext() {
+    if (i >= dailyPayments.length) {
+      // Finished building HTML
+      htmlContent += "</table>";
+      // Then trigger the download
+      const blob = new Blob([htmlContent], { type: "application/vnd.ms-excel;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `DailyPayments_${Date.now()}.xls`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      return;
+    }
+    let payment = dailyPayments[i];
+    let rowHtml = `<tr>
+      <td>${payment.date}</td>
+      <td>${payment.defendantName}</td>`;
+
+    if (payment.receiptFileNames && payment.receiptFileNames.length > 0) {
+      // Suppose payment.receiptFileNames[0] is the path. Adjust to your code...
+      let filePath = "uploads/" + payment.receiptFileNames[0]; 
+      embedImageAsDataUrl(filePath, function(dataUrl) {
+        if (dataUrl) {
+          // embed in an <img> tag
+          rowHtml += `<td><img src="${dataUrl}" style="max-width:120px;"></td></tr>`;
+        } else {
+          // fallback
+          rowHtml += "<td>No Image</td></tr>";
+        }
+        htmlContent += rowHtml;
+        i++;
+        processNext();
+      });
+    } else {
+      rowHtml += "<td>No Image</td></tr>";
+      htmlContent += rowHtml;
+      i++;
+      processNext();
+    }
+  }
+  processNext();
+}
+
+async function exportDailyLogXlsxWithImages(dateValue, agentName, officeName, dailyPayments) {
+  // 1) Create a new Workbook
+  const wb = XLSX.utils.book_new();
+
+  // 2) Build a Worksheet from array of arrays
+  let data = [
+    ["Daily Payment Log"],
+    ["Date:", dateValue],
+    ["Agent Name:", agentName],
+    ["Office:", officeName],
+    [],
+    ["Date", "Defendant", "Image"]
+  ];
+
+  // We'll store row indexes -> file path for images
+  let imagePositions = [];
+
+  dailyPayments.forEach((pay, idx) => {
+    let row = [];
+    row.push(pay.date || "");
+    row.push(pay.defendantName || "");
+    // We'll place a placeholder for the image
+    row.push("");
+    data.push(row);
+
+    if (pay.receiptFileNames && pay.receiptFileNames.length > 0) {
+      imagePositions.push({ rowIndex: data.length - 1, file: pay.receiptFileNames[0] });
+    }
+  });
+
+  let ws = XLSX.utils.aoa_to_sheet(data);
+  XLSX.utils.book_append_sheet(wb, ws, "Payments");
+
+  // 3) For each row that has an image, embed it
+  for (let pos of imagePositions) {
+    let filePath = "uploads/" + pos.file;
+    let base64 = await fetch(filePath)
+      .then(r => r.blob())
+      .then(blob => new Promise((resolve) => {
+        let reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      }))
+      .catch(() => null);
+
+    if (base64) {
+      // SheetJS v0.18+ has a way to add images to a workbook. 
+      // "writeFile" can handle that if we define '!images' in the workbook. 
+      // https://docs.sheetjs.com/docs/api/utilities#adding-images
+
+      // We'll parse out the base64 part
+      const base64Data = base64.split(",")[1]; // everything after data:image/png;base64,
+      // We'll store the image in the workbook
+      if (!wb["!images"]) wb["!images"] = [];
+      wb["!images"].push({
+        name: `img_${pos.rowIndex}`,
+        data: base64Data,
+        opts: {
+          // We'll place it over a particular cell 
+          sheet: "Payments",
+          // specify the cell coordinates (r,c) for top-left corner
+          // e.g. rowIndex, colIndex 
+          // rowIndex here is offset by however many rows of header you have
+          // For simplicity, let's just say we put it at col 2, row pos.rowIndex
+          // pos.rowIndex is data-based (0-based?), so you might need an offset
+          origin: { r: pos.rowIndex, c: 2 },
+          editAs: "oneCell", 
+          offset: { x: 2, y: 2 }, // small offset in px
+          width: 128,   // in px
+          height: 64
+        }
+      });
+    }
+  }
+  uploadBtn.addEventListener("click", function() {
+  const fileCount = receiptUpload.files.length;
+  if (fileCount === 0) {
+    showMessage("No files selected for upload!", true);
+    return;
+  }
+  // Typically you'd POST these to your server with FormData...
+  showMessage("Image has been uploaded to the gallery and is ready for sending!");
+});
+  // 4) Finally, write the file
+  XLSX.writeFile(wb, `DailyPaymentsWithImages_${Date.now()}.xlsx`);
+}
+
+
   </script>
 </body>
 </html>

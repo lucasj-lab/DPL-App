@@ -65,8 +65,7 @@ try {
     $pdo = new PDO($dsn, $dbUser, $dbPass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Example schema: you must have these columns in `payment` table
-    // Adjust as needed
+ 
     $sql = "
       INSERT INTO payment (
         office, county, employee_name, date_value, defendant_name,
