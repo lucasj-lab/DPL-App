@@ -228,7 +228,7 @@ input:checked + .slider:before {
 }   
 
     .container-wrapper {
-      width: 85%;
+      width: 90%;
       display: flex;
       justify-content: center;
       margin-top: 40px;
@@ -414,8 +414,8 @@ input:checked + .slider:before {
   font-weight: bold;
 }
     /* Hide items we no longer want visible */
-    #darkModeSwitchRow,
-    #dateRow {
+    #darkModeSwitch,
+    #paymentDateInput {
       display: none; /* completely hide these elements */
     }
     /* ============ RESPONSIVE MEDIA QUERY ============ */
@@ -432,7 +432,7 @@ input:checked + .slider:before {
         max-width: none;
       }
       .container {
-        width: 100%;
+        width: 90%;
         margin: 0;
         padding: 0 10px;
       }
@@ -446,82 +446,6 @@ input:checked + .slider:before {
       <div class="card">
         <div class="card-content">
           <h2>A/R Payment</h2>
-
-          <!-- Dark Mode Toggle (checked by default) -->
-          <div class="form-row toggle-row">
-            <label class="switch">
-              <input type="checkbox" id="darkModeSwitch" checked>
-              <span class="slider"></span>
-            </label>
-            <label for="darkModeSwitch" style="margin-bottom: 0;">007</label>
-          </div>
-
-
-            
-            
-            <label for="configureToggle" style="margin-bottom: 0;"></label>
-          </div>
-
-          <!-- Hidden section: Office, Account, Employee Name
-               Must be a direct sibling of #configureToggle for the CSS ~ rule to work -->
-          <div class="configure-section">
-            <div class="form-row">
-              <label for="officeSelect">Office:</label>
-              <select id="officeSelect">
-                <option value="Cobb" selected>Cobb</option>
-                <option value="12732">Barrow</option>
-                <option value="12733">Bartow</option>
-                <option value="12734">Carroll</option>
-                <option value="12735">Cherokee</option>
-                <option value="12736">Clarke</option>
-                <option value="12738">Floyd</option>
-                <option value="12739">Gordon</option>
-                <option value="12740">Gwinnett</option>
-                <option value="12741">Haralson</option>
-                <option value="12742">Paulding</option>
-                <option value="14385">Pickens</option>
-                <option value="12743">Polk</option>
-              </select>
-            </div>
-
-            <div class="form-row">
-              <label for="countySelect">Account:</label>
-              <select id="countySelect">
-                <option value="Cobb" selected>Cobb</option>
-                <option value="12732">Barrow</option>
-                <option value="12733">Bartow</option>
-                <option value="12734">Carroll</option>
-                <option value="12735">Cherokee</option>
-                <option value="12736">Clarke</option>
-                <option value="12738">Floyd</option>
-                <option value="12739">Gordon</option>
-                <option value="12740">Gwinnett</option>
-                <option value="12741">Haralson</option>
-                <option value="12742">Paulding</option>
-                <option value="14385">Pickens</option>
-                <option value="12743">Polk</option>
-              </select>
-            </div>
-
-            <div class="form-row">
-              <label for="employeeNameInput">Employee Name:</label>
-              <input id="employeeNameInput" list="employeeNameSelect" placeholder="Choose Employee..." value="Lucas">
-              <datalist id="employeeNameSelect">
-                <option value="Lucas"></option>
-                <option value="Adam P."></option>
-                <option value="Amber M."></option>
-                <option value="Vicki W."></option>
-              </datalist>
-            </div>
-          </div>
-
-          <!-- Date Row -->
-          <div class="form-row" style="flex-direction: row; gap: 20px;">
-            <div style="flex: 1;">
-              <label for="paymentDateInput"></label><br>
-              <input id="paymentDateInput" type="text" placeholder="MM/DD/YYYY">
-            </div>
-          </div>
 
           <!-- Split Payment Container -->
           <div class="split-payment-container" id="splitPaymentContainer" placeholder="Payment Details">
@@ -615,6 +539,81 @@ input:checked + .slider:before {
       </div> <!-- .card -->
     </div> <!-- .container -->
   </div> <!-- .container-wrapper -->
+          <!-- Dark Mode Toggle (checked by default) -->
+          <div class="form-row toggle-row">
+            <label class="switch">
+              <input type="checkbox" id="darkModeSwitch" checked>
+              <span class="slider"></span>
+            </label>
+            <label for="darkModeSwitch" style="margin-bottom: 0;">007</label>
+          </div>
+
+
+            
+            
+            <label for="configureToggle" style="margin-bottom: 0;"></label>
+          </div>
+
+          <!-- Hidden section: Office, Account, Employee Name
+               Must be a direct sibling of #configureToggle for the CSS ~ rule to work -->
+          <div class="configure-section">
+            <div class="form-row">
+              <label for="officeSelect">Office:</label>
+              <select id="officeSelect">
+                <option value="Cobb" selected>Cobb</option>
+                <option value="12732">Barrow</option>
+                <option value="12733">Bartow</option>
+                <option value="12734">Carroll</option>
+                <option value="12735">Cherokee</option>
+                <option value="12736">Clarke</option>
+                <option value="12738">Floyd</option>
+                <option value="12739">Gordon</option>
+                <option value="12740">Gwinnett</option>
+                <option value="12741">Haralson</option>
+                <option value="12742">Paulding</option>
+                <option value="14385">Pickens</option>
+                <option value="12743">Polk</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <label for="countySelect">Account:</label>
+              <select id="countySelect">
+                <option value="Cobb" selected>Cobb</option>
+                <option value="12732">Barrow</option>
+                <option value="12733">Bartow</option>
+                <option value="12734">Carroll</option>
+                <option value="12735">Cherokee</option>
+                <option value="12736">Clarke</option>
+                <option value="12738">Floyd</option>
+                <option value="12739">Gordon</option>
+                <option value="12740">Gwinnett</option>
+                <option value="12741">Haralson</option>
+                <option value="12742">Paulding</option>
+                <option value="14385">Pickens</option>
+                <option value="12743">Polk</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <label for="employeeNameInput">Employee Name:</label>
+              <input id="employeeNameInput" list="employeeNameSelect" placeholder="Choose Employee..." value="Lucas">
+              <datalist id="employeeNameSelect">
+                <option value="Lucas"></option>
+                <option value="Adam P."></option>
+                <option value="Amber M."></option>
+                <option value="Vicki W."></option>
+              </datalist>
+            </div>
+          </div>
+
+          <!-- Date Row -->
+          <div class="form-row" style="flex-direction: row; gap: 20px;">
+            <div style="flex: 1;">
+              <label for="paymentDateInput"></label><br>
+              <input id="paymentDateInput" type="text" placeholder="MM/DD/YYYY">
+            </div>
+          </div>
 
   <!-- SheetJS for XLS/XLSX export (if desired) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
