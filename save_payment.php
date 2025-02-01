@@ -212,3 +212,39 @@ echo json_encode([
     "paymentId" => $paymentId,
     "pdfUrl"    => $pdfUrl
 ]);
+
+// ... existing code that inserts into DB, generates PDF, etc.
+
+// Now that $pdfFilepath or $uploadedImagePath is available, let's email it
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require __DIR__ . '/vendor/autoload.php';
+
+$mail = new PHPMailer(true);
+try {
+    $mail->isSMTP();
+    $mail->Host       = 'smtp.example.com';
+    $mail->SMTPAuth   = true;
+    $mail->Username   = 'your_email@example.com';
+    $mail->Password   = 'email_password';
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port       = 587;
+
+    $mail->setFrom('your_email@example.com', 'Your Name');
+    $mail->addAddress('recipient@example.com');
+
+    $mail->Subject = 'Payment Confirmation';
+    $mail->Body    = "Hello, here's the payment PDF!";
+
+    // Attach the PDF
+    if (file_exists($pdfFilepath)) {
+        $mail->addAttachment($pdfFilepath);
+    }
+
+    $mail->send();
+    // Return JSON success
+    echo json_encode(["success" => true, "message" => "PDF emailed successfully!"]);
+} catch (Exception $e) {
+    echo json_encode(["success" => false, "error" => $mail->ErrorInfo]);
+}
